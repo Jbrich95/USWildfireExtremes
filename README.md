@@ -6,7 +6,7 @@ The methodology described in the manuscript has also been incorporated into the 
 
 ## Repository structure
 
-We first briefly describe the repository structure, although an understanding of this structure is not needed to reproduce the results. The repository is organised into folders containing source code (`src`), intermediate objects generated from the source code (`intermediates`), figures (`img`), and controlling shell scripts that execute the source code (`sh`). Each folder is further divided into the following tree structure, where each branch is associated with one component of the manuscript:
+We first briefly describe the repository structure. The repository is organised into folders containing source code (`src`), intermediate objects generated from the source code (`intermediates`), figures (`img`), and controlling shell scripts that execute the source code (`sh`). Each folder is further divided into the following tree structure, where each branch is associated with one component of the manuscript:
 
 ```bash
 ├── Application         (Section 4)
@@ -57,9 +57,5 @@ The code will run on CPUs. No GPU acceleration is required.
 
 ### Reproducing the results
 
-The replication script is `sh/all.sh`, invoked using `bash sh/all.sh` from the top level of this repository. For all studies, the replication script will automatically train the neural estimators, generate estimates from both the neural and likelihood-based estimators, and populate the `img` folder with the figures and results of the manuscript.
 
-The nature of our experiments means that the run time for reproducing the results of the manuscript is substantial (1-2 days in total). When running the replication script, the user will be prompted with an option to quickly establish that the code is working by using a small number of parameter configurations and epochs. Our envisioned workflow is to establish that the code is working with this "quick" option, clear the populated folders by entering `bash sh/clear.sh`, and then run the code in full (possibly over the weekend). **NB:** under this "quick" option, very few training samples and epochs are used when training the GNN, and the results produced will therefore not be meaningful and should not be interpreted.  
-
-Note that the replication script is clearly presented and commented; hence, one may easily "comment out" sections to produce a subset of the results. (Comments in `.sh` files are made with `#`.) 
 
