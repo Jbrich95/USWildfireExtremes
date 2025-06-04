@@ -1,6 +1,7 @@
 
 
 
+
 # Load conda environment, and Keras/Tensorflow
 
 library(keras)
@@ -13,7 +14,6 @@ set_random_seed(1)
 
 
 
-
 tau = 0.8  # set quantile level, tau
 nunits = c(12, 12, 12) # set number of CNN units
 load("data/df_application.Rdata")
@@ -23,7 +23,7 @@ load("data/df_application.Rdata")
 # Extract command line arguments
 args = commandArgs(trailingOnly = T)
 boot.num = as.numeric(args[1])
-set.seed(boot.num) 
+set.seed(boot.num)
 
 
 
@@ -83,7 +83,7 @@ load(
     ".Rdata"
   )
 )
-  
+
 Y_train <- Y_boot
 # Fit to non-zero values only
 Y_train[Y_train == 0] = -1e5
@@ -195,9 +195,17 @@ if (boot.num > 1)
 history <- model %>% fit(
   list(X_boot),
   Y_train,
-  epochs = 1000,
-  batch_size = 161,
-  callback = list(checkpoint),
+  shuffle = T,
+  epochs = 100,
+  batch_size = 1,
+  callback = list(
+    checkpoint,
+    callback_early_stopping(
+      monitor = "val_loss",
+      min_delta = 0,
+      patience = 5
+    )
+  ),
   validation_data = list(list(nn_input = X_boot), Y_valid)
   
 )
@@ -210,6 +218,8 @@ model <- load_model_weights_tf(model,
 pred_u <- model %>% predict(list(X))
 pred_u_boot <- model %>% predict(list(X_boot))
 
+st = "intermediates/predictions/quantile"
+dir.create(st)
 save(
   pred_u,
   pred_u_boot,

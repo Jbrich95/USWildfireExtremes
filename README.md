@@ -53,9 +53,8 @@ sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev
 
 ### Hardware requirements
 
-The code will run on CPUs. No GPU acceleration is required.
+The code will run on CPUs. No GPU acceleration is required. However, please note that simulation of the space-time Gaussian process to create the training/validation/test sets for the application requires >16Gb of RAM. The indices used in the paper are provided in the repository: intermediates/indices/.
 
 ### Reproducing the results
 
-
-
+Replication scripts are included in shell scripts (in sh/) and should be invoked from the top of the directory. For example, one can replicate the application by invoking bash sh/application.sh. Given that 

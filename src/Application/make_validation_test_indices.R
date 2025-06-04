@@ -40,6 +40,13 @@ b[length(b)] = b[length(b)] + (N - sum(b))
 all_inds = all_inds[1:N]
 
 
+
+Y_boot = Y[all_inds, , ]
+X_boot = X[all_inds, , , ]
+
+
+
+
 # Create validation and testing data by removing sapce-time clusters
 
 obs_inds = which(Y_boot >= 0, arr.ind = T)
@@ -63,8 +70,8 @@ for (i in 1:length(unique(b))) {
   all_coords = c()
   for (j in 1:unique(b)[i])
     all_coords = rbind(all_coords, coords)
-  Cor_mat = fields::Exponential(rdist.earth(all_coords), range = 100) * fields::Exponential(rdist(rep(1:unique(b)[i], each =
-                                                                                                        nrow(coords))), range = 5)
+  Cor_mat = fields::Exponential(fields::rdist.earth(all_coords), range = 100) * fields::Exponential(fields::rdist(rep(1:unique(b)[i], each =
+                                                                                                                        nrow(coords))), range = 5)
   
   tmp[[i]] = mvnfast::rmvn(sum(b == unique(b)[i]), mu = rep(0, nrow(Cor_mat)), sigma =
                              Cor_mat)
@@ -102,8 +109,7 @@ for (i in 1:dim(X)[4]) {
   
 }
 
-Y_boot = Y[all_inds, , ]
-X_boot = X[all_inds, , , ]
+
 
 
 

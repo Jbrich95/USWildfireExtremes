@@ -275,9 +275,11 @@ if (boot.num > 1)
 history <- model %>% fit(
   list(X_I_1_boot, X_I_2_boot, X_N_boot),
   Y_train,
-  epochs = 1000,
-  batch_size = 161,
-  callback = list(checkpoint),
+  shuffle = T,
+  epochs = 100,
+  batch_size = 1,
+  callback = list(checkpoint, callback_early_stopping(monitor = "val_loss", 
+                                                      min_delta = 0, patience = 5)),
   validation_data = list(
     list(
       lin_input1 = X_I_1_boot,
@@ -297,10 +299,11 @@ model <- load_model_weights_tf(model,
 pred_p0 <- model %>% predict(list(X_I_1,X_I_2,X_N))
 pred_p0_boot <- model %>% predict(list(X_I_1_boot,X_I_2_boot,X_N_boot))
 
-
+st = "intermediates/predictions/p0_local_PINN_fit"
+dir.create(st)
 save(
-  pred_p,
-  pred_p_boot,
+  pred_p0,
+  pred_p0_boot,
   file = paste0(
     "intermediates/predictions/p0_local_PINN_fit/boot_",
     boot.num,
@@ -317,6 +320,8 @@ temp[temp < 0] = NA
 auc.test = pROC::auc(temp[!is.na(temp)], pred_p0_boot[!is.na(temp)])
 print(auc.test)
 
+st = "intermediates/scores/p0_local_PINN_fit"
+dir.create(st)
 save(
   auc.test,
   file = paste0(
