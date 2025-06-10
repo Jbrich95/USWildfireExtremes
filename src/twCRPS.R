@@ -1,5 +1,5 @@
 
-s = function(prediction_ba, obs, u_ba, weights_ba){
+get_twcrps = function(prediction_ba, obs, u_ba, weights_ba){
   distr_obs = c()
   for(k in 1:length(u_ba)){
     distr_obs = cbind(distr_obs, ifelse(u_ba[k] < obs, 0, 1))

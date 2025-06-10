@@ -31,6 +31,7 @@ N = dim(Y)[1]
 
 #Generate random block sies
 b = rgeom(N, 1 / (mean.block.size)) + 1
+b[b>10] = 10 # Set max block size to 10 to mitigate RAM issues
 b = b[1:min(which(cumsum(b) >= N))]
 
 #Find starting indices
@@ -287,15 +288,15 @@ if (boot.num > 1)
 history <- model %>% fit(
   list(X_I_basis_boot, X_N_boot),
   Y_train,
-  epochs = 100,
+  epochs = 250,
   shuffle = T,
-  batch_size = 1,
+  batch_size = 16,
   callback = list(
     checkpoint,
     callback_early_stopping(
       monitor = "val_loss",
       min_delta = 0,
-      patience = 5
+      patience = 20
     )
   ),
   validation_data = list(
@@ -338,6 +339,7 @@ temp[temp < 0] = NA
 
 auc.test = pROC::auc(temp[!is.na(temp)], pred_p0_boot[!is.na(temp)])
 print(auc.test)
+auc.test = c(auc.test)
 
 st = "intermediates/scores/p0_global_PINN_fit"
 dir.create(st)
@@ -355,7 +357,7 @@ save(
 
 # Save GAM weights
 gam_weights <- matrix(nrow = dim(knots)[1], ncol = n.knot)
-tmp = t(model$get_layer("additive_p")$get_weights()[[1]])
+tmp = t(model$get_layer("additive_p0")$get_weights()[[1]])
 
 for (i in 1:dim(knots)[1]) {
   gam_weights[i, ] = tmp[(1 + (i - 1) * n.knot):(i * n.knot)]

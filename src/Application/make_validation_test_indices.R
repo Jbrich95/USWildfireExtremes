@@ -19,7 +19,9 @@ N = dim(Y)[1]
 
 #Generate random block sies
 b = rgeom(N, 1 / (mean.block.size)) + 1
+b[b>10] = 10 # Set max block size to 10 to mitigate RAM issues
 b = b[1:min(which(cumsum(b) >= N))]
+
 
 #Find starting indices
 inds = sample(1:N, length(b))
@@ -75,6 +77,7 @@ for (i in 1:length(unique(b))) {
   
   tmp[[i]] = mvnfast::rmvn(sum(b == unique(b)[i]), mu = rep(0, nrow(Cor_mat)), sigma =
                              Cor_mat)
+  rm(Cor_mat)
   
 }
 

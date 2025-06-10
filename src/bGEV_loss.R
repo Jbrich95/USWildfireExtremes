@@ -5,8 +5,6 @@
 l = function(a, xi) {
   K <- backend()
   
-  # K$exp(-xi*K$log(-K$log(a)))
-  
   (-K$log(a)) ^ (-xi)
 }
 l0 = function(a) {

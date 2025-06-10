@@ -28,6 +28,7 @@ N = dim(Y)[1]
 
 #Generate random block sies
 b = rgeom(N, 1 / (mean.block.size)) + 1
+b[b>10] = 10 # Set max block size to 10 to mitigate RAM issues
 b = b[1:min(which(cumsum(b) >= N))]
 
 #Find starting indices
@@ -222,14 +223,14 @@ history <- model %>% fit(
   list(X_boot),
   Y_train,
   shuffle = T,
-  epochs = 100,
-  batch_size = 1,
+  epochs = 250,
+  batch_size = 16,
   callback = list(
     checkpoint,
     callback_early_stopping(
       monitor = "val_loss",
       min_delta = 0,
-      patience = 5
+      patience = 20
     )
   ),
   validation_data = list(list(nn_input = X_boot), Y_valid)
@@ -268,6 +269,7 @@ temp[temp < 0] = NA
 
 auc.test = pROC::auc(temp[!is.na(temp)], pred_p0_boot[!is.na(temp)])
 print(auc.test)
+auc.test = c(auc.test)
 
 st = "intermediates/scores/p0_NN_fit"
 dir.create(st)

@@ -64,7 +64,7 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	echo ""
 	echo "global PINN p_0(s,t) model"
 	echo ""
-	Rscript src/Application/bootstrap_p0_local_PINN_estimate.R $boot_id
+	Rscript src/Application/bootstrap_p0_global_PINN_estimate.R $boot_id
 
 	echo ""
 	echo "CNN p_0(s,t) model"
@@ -75,6 +75,7 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	echo "All p_0(s,t) models trained"
 	echo ""
 fi
+
 
 echo ""
 echo "Do you wish to train the burnt area, Y(s,t)| Y(s,t) >0, models> (y/n)"
@@ -91,7 +92,46 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	echo "Training the threshold u(s,t) CNN model"
 	echo ""
 
-	Rscript src/Application/bootstrap_threshold_estimate.R $boot_id
+	# Rscript src/Application/bootstrap_threshold_estimate.R $boot_id
+	
+	echo ""
+	echo "Training the bGEV models"
+	echo ""
+
+	echo ""
+	echo "linear bGEV model"
+	echo ""
+	#Rscript src/Application/bootstrap_bGEV_linear_estimate.R $boot_id
+			
+	echo ""
+	echo "GAM bGEV model"
+	echo ""
+	#Rscript src/Application/bootstrap_bGEV_GAM_estimate.R $boot_id
+	
+	echo ""
+	echo "local PINN bGEV model"
+	echo ""
+	Rscript src/Application/bootstrap_bGEV_local_PINN_estimate.R $boot_id
+	
+	echo ""
+	echo "local PINN (homogeneous xi) bGEV model"
+	echo ""
+	#Rscript src/Application/bootstrap_bGEV_local_PINN_homo_xi_estimate.R $boot_id
+	
+	echo ""
+	echo "global PINN bGEV model"
+	echo ""
+	#Rscript src/Application/bootstrap_bGEV_global_PINN_estimate.R $boot_id
+	
+    echo ""
+	echo "CNN bGEV model"
+	echo ""
+	# Rscript src/Application/bootstrap_bGEV_NN_estimate.R $boot_id
+	
+	
+	echo ""
+	echo "All bGEV models trained"
+	echo ""
 fi
 
 echo ""
