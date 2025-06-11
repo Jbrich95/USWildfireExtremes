@@ -53,8 +53,8 @@ sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev
 
 ### Hardware requirements
 
-The code will run on CPUs. No GPU acceleration is required. However, please note that simulation of the space-time Gaussian process to create the training/validation/test sets for the application requires >16Gb of RAM. The indices used in the paper are provided in the repository: intermediates/indices/.
+The code will run on CPUs. No GPU acceleration is required. However, please note that simulation of the space-time Gaussian process to create the training/validation/test sets for the application requires >16Gb of RAM. The indices used in the paper are provided in the repository: `intermediates/indices/`.
 
 ### Reproducing the results
 
-Replication scripts are included in shell scripts (in sh/) and should be invoked from the top of the directory. For example, one can replicate estimation of the models for the application by invoking bash sh/application.sh - this will estimate the full complement of models considered in the application for a single bootstrap sample of the data (stored in `data/`). Once these models have been estimated for a sufficient number of bootstrap samples (we use 200 in the paper), the predictive scores and figures (in Section 4 and the supplement) can be computed be calling sh/application_scores.sh and sh/application_plots.sh, respectively. 
+Replication scripts are included in shell scripts (in `sh/`) and should be invoked from the top of the directory. For example, one can replicate estimation of the models for the application by invoking `bash sh/application.sh` - this will estimate the full complement of models considered in the application for a single bootstrap sample of the data (stored in `data/`). Once these models have been estimated for a sufficient number of bootstrap samples (we use 200 in the paper), the predictive scores and figures (in Section 4 and the supplement) can be computed be calling `bash sh/application_scores.sh` and `bash sh/application_plots.sh`, respectively. 
