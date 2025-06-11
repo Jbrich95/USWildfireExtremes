@@ -255,3 +255,31 @@ pbGEV = function(y,
   }
   return(out)
 }
+
+qbGEV=function(prob,q_a,s_b,xi,alpha,beta,p_a,p_b,c1,c2){
+  
+  if(prob < p_b){
+    func=function(x){
+      prob-pbGEV(x,q_a,s_b,xi,alpha,beta,p_a,p_b,c1,c2)
+    }
+    return( uniroot(f=func,interval=c(-1e8,1e8),tol=1e-5 )$root)
+  }else{
+    #Not using tensors
+    l_r=function(a,xi){
+      
+      (-log(a))^(-xi)
+    }
+    l0_r = function(a){
+      
+      
+      log(-log(a))
+    }
+    Finverse = function(x,q_a,s_b,xi,alpha,beta){
+      
+      
+      ( (-log(x))^(-xi)-l_r(alpha,xi))*s_b/(l_r(1-beta/2,xi)-l_r(beta/2,xi))+q_a
+    }
+    return(Finverse(prob,q_a,s_b,xi,alpha,beta))
+    
+  }
+}

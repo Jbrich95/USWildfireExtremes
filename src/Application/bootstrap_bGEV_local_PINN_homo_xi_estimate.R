@@ -169,7 +169,7 @@ input_coords <- layer_input(shape = dim(X_lonlat)[2:4], name = 'coord_input')
 
 #The first layer returns a constant which is untrained. The second layer trains the constant with the initial weight being  equal to qlogis(initial shape)
 # Choose initial starting value - not used if boot.num > 0
-init_xi = 0.1
+init_xi = 0.15
 
 #Use sigmoid activation so 0 \leq xi \leq 1
 xiBranch <- input_coords %>% layer_dense(
@@ -200,7 +200,7 @@ k2 <- 3
 # Model for location q
 
 # Choose initial starting value - not used if boot.num > 0
-init_loc = 30
+init_loc = 20
 
 locBranch <- input_nn %>%
   layer_conv_2d(
@@ -270,7 +270,7 @@ locBranch <- locBranch %>%
 # Model for spread s
 
 # Choose initial starting value - not used if boot.num > 0
-init_spread = 40#
+init_spread = 70#
 
 spreadBranch <- input_nn %>%
   layer_conv_2d(

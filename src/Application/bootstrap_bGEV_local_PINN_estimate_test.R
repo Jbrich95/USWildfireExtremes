@@ -10,14 +10,9 @@ set_random_seed(1)
 
 
 xi.nunits = c(8, 8, 8) # set number of MLP units for xi
-q.nunits = c(24, 24, 24) # set number of CNN units for q
+q.nunits = c(20, 20, 20) # set number of CNN units for q
 s.nunits = c(10, 10, 10) # set number of CNN units for s
-load("data/df_application.Rdata")
-
-# Extract interpreted covariates, t2m and spi
-X_I = X[, , , c(which(cov_names == "t2m"), which(cov_names == "spi"))]
-X_N = X[, , , -c(which(cov_names == "t2m"), which(cov_names == "spi"))]
-
+load("data/df_application_statewise.Rdata")
 
 # Extract command line arguments
 args = commandArgs(trailingOnly = T)
@@ -55,7 +50,6 @@ b[length(b)] = b[length(b)] + (N - sum(b))
 all_inds = all_inds[1:N]
 
 
-
 #Standardise each feature map - Only for non-masked values
 
 for (i in 1:dim(X_N)[4]) {
@@ -66,10 +60,31 @@ for (i in 1:dim(X_N)[4]) {
   
 }
 
+
+
+for (i in 1:dim(X_I_1)[4]) {
+  temp = X_I_1[, , , i]
+  m = mean(temp[temp != 0])
+  s = sd(temp[temp != 0])
+  temp = (temp - m) / s
+  X_I_1[, , , i][X_I_1[, , , i] != 0] = temp[X_I_1[, , , i] !=
+                                               0]
+  
+  
+  temp = X_I_2[, , , i]
+  m = mean(temp[temp != 0])
+  s = sd(temp[temp != 0])
+  temp = (temp - m) / s
+  X_I_2[, , , i][X_I_2[, , , i] != 0] = temp[X_I_2[, , , i] !=
+                                               0]
+}
+
+
 Y_boot = Y[all_inds, , ]
 X_N_boot = X_N[all_inds, , , ]
 
-
+X_I_1_boot <- X_I_1[all_inds, , , ]
+X_I_2_boot <- X_I_2[all_inds, , , ]
 
 # Create coordinates for modelling xi
 
@@ -96,55 +111,10 @@ load(
 )
 
 
-
-
-# Get knot evaluations
-n.knot = 10 # number of knots.
-X_I_basis  <- array(dim = c(dim(X_I), n.knot))
-
-
-temp = c()
-knots = matrix(nrow = dim(X_I)[4], ncol = n.knot)
-for (i in 1:dim(X_I)[4]) {
-  #Get knots? Just equally spaced quantiles
-  temp = X_I[, , , i]
-  knots[i, ] = quantile(temp, probs = seq(0, 1, length = n.knot)) #equally spaced quantiles
-}
-
-# basis function
-rad = function(x, c) {
-  out = abs(x - c) ^ 2 * log(abs(x - c))
-  out[(x - c) == 0] = 0
-  return(out)
-}
-
-
-bases_min <- bases_range <- matrix(nrow = dim(X_I)[4], ncol =
-                                     n.knot)
-for (i in 1:dim(X_I)[4]) {
-  for (k in 1:n.knot) {
-    X_I_basis[, , , i, k] = rad(x = X_I[, , , i], c =
-                                  knots[i, k])
-    #Scale radial bases to aid training
-    
-    temp = X_I_basis[, , , i, k]
-    bases_min[i, k] = mean(temp)
-    bases_range[i, k] = sd(temp)
-    
-    X_I_basis[, , , i, k] = (temp - bases_min[i, k]) / bases_range[i, k]
-    
-    
-  }
-}
-
-X_I_basis_boot <- X_I_basis[all_inds, , , , ]
-
 Y_train <- Y_boot
 # Fit to non-zero values only
 Y_train[Y_train == 0] = -1e5
 Y_test <- Y_valid <- Y_train
-
-
 
 
 
@@ -179,9 +149,14 @@ load(paste0(
 
 # Build Keras model
 
+#Linear models
+input_lin1 <- layer_input(shape = dim(X_I_1)[2:4], name = 'lin_input1')
+input_lin2 <- layer_input(shape = dim(X_I_2)[2:4], name = 'lin_input2')
+
+
+
 # Input X_N for q and s
 input_nn <- layer_input(shape = dim(X_N)[2:4], name = 'nn_input')
-
 
 # Input exceedance threshold
 input_u <- layer_input(shape = dim(pred_u)[2:4], name = 'u_input')
@@ -189,16 +164,12 @@ input_u <- layer_input(shape = dim(pred_u)[2:4], name = 'u_input')
 # Input latlon for xi
 input_coords <- layer_input(shape = dim(X_lonlat)[2:4], name = 'coord_input')
 
-# Additive input for GAM model
-input_additive <- layer_input(shape = dim(X_I_basis)[2:5], name = 'additive_input')
-
-
 
 # Model for xi
 
 #The first layer returns a constant which is untrained. The second layer trains the constant with the initial weight being  equal to qlogis(initial shape)
 # Choose initial starting value - not used if boot.num > 0
-init_xi = 0.15
+init_xi = 0.35
 
 xiBranch <- input_coords %>%
   layer_dense(
@@ -226,7 +197,6 @@ xiBranch <- xiBranch %>% layer_dense(
 )
 
 
-
 k1 <- 3 # kernel dimension
 k2 <- 3
 
@@ -235,7 +205,6 @@ k2 <- 3
 
 # Choose initial starting value - not used if boot.num > 0
 init_loc = 20
-
 
 locBranch <- input_nn %>%
   layer_conv_2d(
@@ -265,22 +234,36 @@ locBranch <- locBranch %>% layer_dense(
 )
 
 
-#Additive layer
-addBranchloc <- input_additive %>%
-  layer_reshape(target_shape = c(dim(X_I_basis)[2:3], prod(dim(X_I_basis)[4:5]))) %>%
+
+
+#Linear layers
+linBranchLoc1 <- input_lin1 %>%
   layer_dense(
     units = 1,
     activation = 'linear',
-    name = 'additive_q',
+    input_shape = dim(X_I_1)[2:4],
+    name = 'lin_loc1',
     weights = list(matrix(
-      0, nrow = prod(dim(X_I_basis)[4:5]), ncol = 1
+      0, nrow = dim(X_I_1)[4], ncol = 1
+    )),
+    use_bias = F
+  )
+
+linBranchLoc2 <- input_lin2 %>%
+  layer_dense(
+    units = 1,
+    activation = 'linear',
+    input_shape = dim(X_I_2)[2:4],
+    name = 'lin_loc2',
+    weights = list(matrix(
+      0, nrow = dim(X_I_2)[4], ncol = 1
     )),
     use_bias = F
   )
 
 
-#Add GAM branch to NN branch
-locBranch <- layer_add(inputs = c(addBranchloc, locBranch))
+#Add linear branch to nonlinear branches
+locBranch <- layer_add(inputs = c(linBranchLoc1, linBranchLoc2, locBranch))
 
 # Use exponential activation so q > 0
 locBranch <- locBranch %>%
@@ -291,7 +274,7 @@ locBranch <- locBranch %>%
 # Model for spread s
 
 # Choose initial starting value - not used if boot.num > 0
-init_spread = 70#
+init_spread = 40#
 
 spreadBranch <- input_nn %>%
   layer_conv_2d(
@@ -321,35 +304,47 @@ spreadBranch <- spreadBranch %>% layer_dense(
 )
 
 
-
-#Additive layer
-addBranchspread <- input_additive %>%
-  layer_reshape(target_shape = c(dim(X_I_basis)[2:3], prod(dim(X_I_basis)[4:5]))) %>%
+#Linear layers for s
+linBranchSpread1 <- input_lin1 %>%
   layer_dense(
     units = 1,
     activation = 'linear',
-    name = 'additive_spread',
+    input_shape = dim(X_I_1)[2:4],
+    name = 'lin_spread1',
     weights = list(matrix(
-      0, nrow = prod(dim(X_I_basis)[4:5]), ncol = 1
+      0, nrow = dim(X_I_1)[4], ncol = 1
+    )),
+    use_bias = F
+  )
+linBranchSpread2 <- input_lin2 %>%
+  layer_dense(
+    units = 1,
+    activation = 'linear',
+    input_shape = dim(X_I_2)[2:4],
+    name = 'lin_spread2',
+    weights = list(matrix(
+      0, nrow = dim(X_I_2)[4], ncol = 1
     )),
     use_bias = F
   )
 
-#Add GAM branch to NN branch
-spreadBranch <- layer_add(inputs = c(addBranchspread, spreadBranch))
+#Add linear branch to nonlinear branches
+
+spreadBranch <- layer_add(inputs = c(linBranchSpread1, linBranchSpread2, spreadBranch))
 
 #Use exponential activation so s > 0
 spreadBranch <- spreadBranch %>%
   layer_activation(activation = 'exponential')
 
+
 # Combine input threshold u, and models for q, s, and xi
 output <- layer_concatenate(c(input_u, locBranch, spreadBranch, xiBranch))
 
+
 model <- keras_model(
-  inputs = c(input_additive, input_nn, input_u, input_coords),
+  inputs = c(input_lin1, input_lin2, input_nn, input_u, input_coords),
   outputs = c(output)
 )
-
 summary(model)
 
 
@@ -360,11 +355,10 @@ source("src/bGEV_loss.R")
 model %>% compile(optimizer = "adam",
                   loss = bGEV_loss,
                   run_eagerly = T)
-
 #After every epoch, saves the weights if this is the best model
 
 checkpoint <- callback_model_checkpoint(
-  paste0("intermediates/models/bGEV_global_PINN_fit/boot_", boot.num),
+  paste0("intermediates/models/bGEV_local_PINN_fit_test/boot_", boot.num),
   monitor = "val_loss",
   verbose = 0,
   save_best_only = TRUE,
@@ -375,15 +369,16 @@ checkpoint <- callback_model_checkpoint(
 
 if (boot.num > 1)
   model <- load_model_weights_tf(model,
-                                 filepath = paste0("intermediates/models/bGEV_global_PINN_fit/boot_", 1))
+                                 filepath = paste0("intermediates/models/bGEV_local_PINN_fit_test/boot_", 1))
+
 
 
 history <- model %>% fit(
-  list(X_I_basis_boot, X_N_boot, pred_u_boot, X_lonlat),
+  list(X_I_1_boot, X_I_2_boot, X_N_boot, pred_u_boot, X_lonlat),
   Y_train,
   epochs = 200,
   shuffle = T,
-  batch_size = 16,
+  batch_size = 32,
   callback = list(
     checkpoint,
     callback_early_stopping(
@@ -395,7 +390,8 @@ history <- model %>% fit(
   
   validation_data = list(
     list(
-      additive_input = X_I_basis_boot,
+      lin_input1 = X_I_1_boot,
+      lin_input2 = X_I_2_boot,
       nn_input = X_N_boot,
       u_input = pred_u_boot,
       coord_input = X_lonlat
@@ -405,23 +401,21 @@ history <- model %>% fit(
   
 )
 
-
-
 model <- load_model_weights_tf(model,
-                               filepath = paste0("intermediates/models/bGEV_global_PINN_fit/boot_", boot.num))
+                               filepath = paste0("intermediates/models/bGEV_local_PINN_fit_test/boot_", boot.num))
 
 
 # Get predictions
-pred_bGEV <- model %>% predict(list(X_I_basis, X_N, pred_u, X_lonlat))
-pred_bGEV_boot <- model %>% predict(list(X_I_basis_boot, X_N_boot, pred_u_boot, X_lonlat))
+pred_bGEV <- model %>% predict(list(X_I_1, X_I_2, X_N, pred_u, X_lonlat))
+pred_bGEV_boot <- model %>% predict(list(X_I_1_boot, X_I_2_boot,X_N_boot, pred_u_boot, X_lonlat))
 
-st = "intermediates/predictions/bGEV_global_PINN_fit"
+st = "intermediates/predictions/bGEV_local_PINN_fit_test"
 dir.create(st)
 save(
   pred_bGEV,
   pred_bGEV_boot,
   file = paste0(
-    "intermediates/predictions/bGEV_global_PINN_fit/boot_",
+    "intermediates/predictions/bGEV_local_PINN_fit_test/boot_",
     boot.num,
     ".Rdata"
   )
@@ -434,21 +428,20 @@ nll <- k_get_value(bGEV_loss(k_constant(Y_test), k_constant(pred_bGEV_boot)))
 print("Test loss")
 print(nll)
 
-st = "intermediates/scores/bGEV_global_PINN"
+st = "intermediates/scores/bGEV_local_PINN_test"
 dir.create(st)
-save(
-  nll,
-  file = paste0(
-    "intermediates/scores/bGEV_global_PINN/test_loss_",
-    boot.num,
-    ".Rdata"
-  )
-)
+save(nll,
+     file = paste0(
+       "intermediates/scores/bGEV_local_PINN_test/test_loss_",
+       boot.num,
+       ".Rdata"
+     ))
+
 
 
 
 # Save model
-model %>% save_model_tf(paste0("intermediates/models/bGEV_global_PINN/boot_", boot.num))
+model %>% save_model_tf(paste0("intermediates/models/bGEV_local_PINN_test/boot_", boot.num))
 
 
 
@@ -490,7 +483,7 @@ print("sMAD")
 print(sMAD)
 save(sMAD,
      file = paste0(
-       "intermediates/scores/bGEV_global_PINN/sMAD_",
+       "intermediates/scores/bGEV_local_PINN_test/sMAD_",
        boot.num,
        ".Rdata"
      ))
@@ -535,37 +528,30 @@ for (i in 1:length(u_ba)) {
 twcrps = get_twcrps(probs, valid_values, u_ba, weights_ba)
 print("twCRPS")
 print(twcrps)
+save(twcrps,
+     file = paste0(
+       "intermediates/scores/bGEV_local_PINN_test/twCRPS_",
+       boot.num,
+       ".Rdata"
+     ))
+
+
+
+# Save SVC estimates
+
+
+linear_coeffs_loc1 = model$get_layer("lin_loc1")$get_weights()[[1]]
+linear_coeffs_loc2 = model$get_layer("lin_loc2")$get_weights()[[1]]
+linear_coeffs_spread1 = model$get_layer("lin_spread1")$get_weights()[[1]]
+linear_coeffs_spread2 = model$get_layer("lin_spread2")$get_weights()[[1]]
+
 save(
-  twcrps,
+  linear_coeffs_loc1,
+  linear_coeffs_loc2,
+  linear_coeffs_spread1,
+  linear_coeffs_spread2,
   file = paste0(
-    "intermediates/scores/bGEV_global_PINN/twCRPS_",
-    boot.num,
-    ".Rdata"
-  )
-)
-
-
-
-
-# Save GAM weights
-gam_weights_q <- matrix(nrow = dim(knots)[1], ncol = n.knot)
-tmp = t(model$get_layer("additive_q")$get_weights()[[1]])
-
-for (i in 1:dim(knots)[1]) {
-  gam_weights_q[i, ] = tmp[(1 + (i - 1) * n.knot):(i * n.knot)]
-}
-gam_weights_s <- matrix(nrow = dim(knots)[1], ncol = n.knot)
-tmp = t(model$get_layer("additive_spread")$get_weights()[[1]])
-
-for (i in 1:dim(knots)[1]) {
-  gam_weights_s[i, ] = tmp[(1 + (i - 1) * n.knot):(i * n.knot)]
-}
-save(
-  knots,
-  gam_weights_q,
-  gam_weights_s,
-  file = paste0(
-    "intermediates/models/bGEV_global_PINN_fit/additivecoeffs_boot_",
+    "intermediates/models/bGEV_local_PINN_fit_test/linearcoeffs_boot_",
     boot.num,
     ".Rdata"
   )

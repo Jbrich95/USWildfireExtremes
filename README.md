@@ -6,7 +6,7 @@ The methodology described in the manuscript has also been incorporated into the 
 
 ## Repository structure
 
-We first briefly describe the repository structure. The repository is organised into folders containing source code (`src`), intermediate objects generated from the source code (`intermediates`), figures (`img`), and controlling shell scripts that execute the source code (`sh`). Each folder is further divided into the following tree structure, where each branch is associated with one component of the manuscript:
+We first briefly describe the repository structure. The repository is organised into folders containing source code (`src`), intermediate objects generated from the source code (`intermediates`), figures (`img`), and controlling shell scripts that execute the source code (`sh`). The `src` folder is further divided into the following tree structure, where each branch is associated with one component of the manuscript:
 
 ```bash
 ├── Application         (Section 4)
@@ -22,13 +22,13 @@ First, download this repository and navigate to its top-level directory within t
 Before installing the software dependencies, users may wish to setup a [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) environment, so that the dependencies of this repository do not affect the user's current installation. To create a conda environment, run the following command in terminal:
 
 ```
-conda create -n USWildfiresExtremes -c conda-forge r-base python=3.10.17
+conda create -n USWildfireExtremes -c conda-forge r-base python=3.10.17
 ```
 
 Then activate the conda environment with:
 
 ```
-conda activate USWildfiresExtremes
+conda activate USWildfireExtremes
 ```
 
 The above conda environment installs R and Python 3 automatically. Once both R and Python are setup, install the R package dependencies (given in `dependencies.txt`) by running the following command from the top-level of the repository:
@@ -57,4 +57,4 @@ The code will run on CPUs. No GPU acceleration is required. However, please note
 
 ### Reproducing the results
 
-Replication scripts are included in shell scripts (in sh/) and should be invoked from the top of the directory. For example, one can replicate the application by invoking bash sh/application.sh. Given that 
+Replication scripts are included in shell scripts (in sh/) and should be invoked from the top of the directory. For example, one can replicate estimation of the models for the application by invoking bash sh/application.sh - this will estimate the full complement of models considered in the application for a single bootstrap sample of the data (stored in `data/`). Once these models have been estimated for a sufficient number of bootstrap samples (we use 200 in the paper), the predictive scores and figures (in Section 4 and the supplement) can be computed be calling sh/application_scores.sh and sh/application_plots.sh, respectively. 

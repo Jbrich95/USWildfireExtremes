@@ -51,3 +51,5 @@ rsconnect/
 intermediates/models*
 intermediates/predictions/*
 intermediates/scores/*
+img/*
+
