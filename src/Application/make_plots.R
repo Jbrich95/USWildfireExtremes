@@ -515,103 +515,103 @@ months = c("",
            "July",
            "August",
            "September")
-for (m in 3:9) {
-  temp = all_p0[seq(m - 2, m - 2 + 22 * 7, by = 7), , , 1, ]
-  lm.coeff = array(NA, dim = dim(temp)[-1])
-  for (k in 1:dim(temp)[4]) {
-    if (!is.na(c(temp[1, 1, 1, k]))) {
-      for (i in 1:ncol(temp)) {
-        for (j in 1:dim(temp)[3]) {
-          fit <- lm(y ~ t, data = data.frame("y" = c(temp[, i, j, k]), "t" = 1:23))
-          lm.coeff[i, j, k] = fit$coefficients[2]
-        }
-      }
-    }
-  }
-  
-  qmed = apply(lm.coeff, c(1, 2), median, na.rm = T)
-  ql = apply(lm.coeff,
-             c(1, 2),
-             quantile,
-             prob = 0.025,
-             na.rm = T)
-  qu = apply(lm.coeff,
-             c(1, 2),
-             quantile,
-             prob = 0.975,
-             na.rm = T)
-  
-  qmed[Y[m, , ] < 0] = NA
-  qmed[qu > 0 & ql < 0] = NA
-  
-
-  pdf(
-    file = paste0("img/p0_diff_m", m, ".pdf"),
-    width = 8,
-    height = 5
-  )
-  
-  c <- 0
-  c    <- contourplot(
-    qmed ~  lonlat[, , 1] * lonlat[, , 2],
-    ylab = "",
-    xlab = "",
-    xlim = lon_range,
-    ylim = lat_range,
-    xaxt = "n",
-    scales = list(tck = c(0, 0), draw = F),
-    colorkey = list(labels = list(cex = 2)),
-    panel = mappanel,
-    aspect = 0.625,
-    region = region,
-    main = list(cex = 2, label = bquote(p[0]:.(paste(
-      months[m]
-    )))),
-    
-    contour = contour,
-    pretty = F,
-    col.regions = (col2) ,
-    at = seq(-max(abs(qmed), na.rm = T), max(abs(qmed), na.rm =
-                                               T), length = 11)
-  )
-  print(c)
-  dev.off()
-  
-  pdf(
-    file = paste0("img/p0_diff_m", m, "_IQR.pdf"),
-    width = 8,
-    height = 5
-  )
-  qmed = apply(lm.coeff, c(1, 2), IQR, na.rm = T)
-  
-  
-  qmed[Y[m, , ] < 0] = NA
-  c <- 0
-  c    <- contourplot(
-    qmed ~  lonlat[, , 1] * lonlat[, , 2],
-    ylab = "",
-    xlab = "",
-    xlim = lon_range,
-    ylim = lat_range,
-    xaxt = "n",
-    scales = list(tck = c(0, 0), draw = F),
-    colorkey = list(labels = list(cex = 2)),
-    panel = mappanel,
-    aspect = 0.625,
-    region = region,
-    main = list(cex = 2, label = bquote(p[0]:.(paste(
-      months[m]
-    )))),
-    
-    contour = contour,
-    pretty = F,
-    col.regions = (col4)
-  )
-  print(c)
-  dev.off()
-  
-  print(paste0(months[m]," finished"))
-}
+# for (m in 3:9) {
+#   temp = all_p0[seq(m - 2, m - 2 + 22 * 7, by = 7), , , 1, ]
+#   lm.coeff = array(NA, dim = dim(temp)[-1])
+#   for (k in 1:dim(temp)[4]) {
+#     if (!is.na(c(temp[1, 1, 1, k]))) {
+#       for (i in 1:ncol(temp)) {
+#         for (j in 1:dim(temp)[3]) {
+#           fit <- lm(y ~ t, data = data.frame("y" = c(temp[, i, j, k]), "t" = 1:23))
+#           lm.coeff[i, j, k] = fit$coefficients[2]
+#         }
+#       }
+#     }
+#   }
+#   
+#   qmed = apply(lm.coeff, c(1, 2), median, na.rm = T)
+#   ql = apply(lm.coeff,
+#              c(1, 2),
+#              quantile,
+#              prob = 0.025,
+#              na.rm = T)
+#   qu = apply(lm.coeff,
+#              c(1, 2),
+#              quantile,
+#              prob = 0.975,
+#              na.rm = T)
+#   
+#   qmed[Y[m, , ] < 0] = NA
+#   qmed[qu > 0 & ql < 0] = NA
+#   
+# 
+#   pdf(
+#     file = paste0("img/p0_diff_m", m, ".pdf"),
+#     width = 8,
+#     height = 5
+#   )
+#   
+#   c <- 0
+#   c    <- contourplot(
+#     qmed ~  lonlat[, , 1] * lonlat[, , 2],
+#     ylab = "",
+#     xlab = "",
+#     xlim = lon_range,
+#     ylim = lat_range,
+#     xaxt = "n",
+#     scales = list(tck = c(0, 0), draw = F),
+#     colorkey = list(labels = list(cex = 2)),
+#     panel = mappanel,
+#     aspect = 0.625,
+#     region = region,
+#     main = list(cex = 2, label = bquote(p[0]:.(paste(
+#       months[m]
+#     )))),
+#     
+#     contour = contour,
+#     pretty = F,
+#     col.regions = (col2) ,
+#     at = seq(-max(abs(qmed), na.rm = T), max(abs(qmed), na.rm =
+#                                                T), length = 11)
+#   )
+#   print(c)
+#   dev.off()
+#   
+#   pdf(
+#     file = paste0("img/p0_diff_m", m, "_IQR.pdf"),
+#     width = 8,
+#     height = 5
+#   )
+#   qmed = apply(lm.coeff, c(1, 2), IQR, na.rm = T)
+#   
+#   
+#   qmed[Y[m, , ] < 0] = NA
+#   c <- 0
+#   c    <- contourplot(
+#     qmed ~  lonlat[, , 1] * lonlat[, , 2],
+#     ylab = "",
+#     xlab = "",
+#     xlim = lon_range,
+#     ylim = lat_range,
+#     xaxt = "n",
+#     scales = list(tck = c(0, 0), draw = F),
+#     colorkey = list(labels = list(cex = 2)),
+#     panel = mappanel,
+#     aspect = 0.625,
+#     region = region,
+#     main = list(cex = 2, label = bquote(p[0]:.(paste(
+#       months[m]
+#     )))),
+#     
+#     contour = contour,
+#     pretty = F,
+#     col.regions = (col4)
+#   )
+#   print(c)
+#   dev.off()
+#   
+#   print(paste0(months[m]," finished"))
+# }
 
 
 
@@ -1246,7 +1246,7 @@ for (t in t_inds) {
   qmed = apply(all_preds[t, , , 3, ], c(1, 2), IQR, na.rm = T)
   
   pdf(
-    file = paste0("Figures/bGEV_spread_IQR_t", t, ".pdf"),
+    file = paste0("img/bGEV_spread_IQR_t", t, ".pdf"),
     width = 8,
     height = 5
   )
