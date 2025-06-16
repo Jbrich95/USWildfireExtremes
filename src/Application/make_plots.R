@@ -44,7 +44,8 @@ pretty = T
 
 print("Creating plots of observed data")
 
-t_inds = 1:161
+#t_inds = 1:161
+t_inds = t_inds=c(103,138,1,55,156,73)
 
 for (t in t_inds) {
   pdf(
@@ -297,144 +298,144 @@ print("Created p0 SVC estimate plots")
 
 
 
-# print("Creating functional boxplots of global p0-PINN estimates")
-# 
-# st = list.files("intermediates/models/p0_global_PINN_fit/")
-# st <- st[which(grepl("additivecoeffs", st))]
-# 
-# 
-# 
-# load(paste0("intermediates/models/p0_global_PINN_fit/", st[1]))
-# 
-# 
-# all_gam = array(dim = c(dim(gam_weights), n.boot))
-# 
-# for (it in 1:n.boot) {
-#   load(paste0("intermediates/models/p0_global_PINN_fit/", st[it]))
-#   
-#   all_gam[, , it] = gam_weights
-#   
-#   
-# }
-# 
-# 
-# n.knot = 10 # number of knots.
-# X_I_basis  <- array(dim = c(dim(X_I), n.knot))
-# 
-# 
-# temp = c()
-# knots = matrix(nrow = dim(X_I)[4], ncol = n.knot)
-# for (i in 1:dim(X_I)[4]) {
-#   #Get knots? Just equally spaced quantiles
-#   temp = X_I[, , , i]
-#   knots[i, ] = quantile(temp, probs = seq(0, 1, length = n.knot)) #equally spaced quantiles
-# }
-# 
-# # basis function
-# rad = function(x, c) {
-#   out = abs(x - c) ^ 2 * log(abs(x - c))
-#   out[(x - c) == 0] = 0
-#   return(out)
-# }
-# 
-# 
-# bases_min <- bases_range <- matrix(nrow = dim(X_I)[4], ncol =
-#                                      n.knot)
-# for (i in 1:dim(X_I)[4]) {
-#   for (k in 1:n.knot) {
-#     X_I_basis[, , , i, k] = rad(x = X_I[, , , i], c =
-#                                   knots[i, k])
-#     #Scale radial bases to aid training
-#     
-#     temp = X_I_basis[, , , i, k]
-#     bases_min[i, k] = mean(temp)
-#     bases_range[i, k] = sd(temp)
-#     
-#     X_I_basis[, , , i, k] = (temp - bases_min[i, k]) / bases_range[i, k]
-#     
-#     
-#   }
-# }
-# 
-# 
-# 
-# for (i in 1:dim(knots)[1]) {
-#   if (i == 1)
-#     plt.x = seq(from = min(knots[i, ]),
-#                 to = max(knots[i, ]),
-#                 length = 1000)
-#   else
-#     plt.x = seq(from = min(knots[i, -1]),
-#                 to = max(knots[i, ]),
-#                 length = 1000)
-#   temp = matrix(nrow = length(plt.x), ncol = n.knot)
-#   for (j in 1:n.knot) {
-#     temp[, j] = rad(plt.x, knots[i, j])
-#     temp[, j] = (temp[, j] - bases_min[i, j]) / bases_range[i, j]
-#     
-#   }
-#   
-#   t0 = matrix(nrow = 1, ncol = n.knot)
-#   for (j in 1:n.knot) {
-#     t0[, j] = rad(median(c(X_I[, , , i])), knots[i, j])
-#     t0[, j] = (t0[, j] - bases_min[i, j]) / bases_range[i, j]
-#   }
-#   
-#   
-#   plt.y = c()
-#   for (it in 1:(n.boot)) {
-#     tmp = temp %*% as.matrix(all_gam[i, , it])
-#     # tmp=tmp-tmp[length(tmp)/2]
-#     
-#     
-#     y.zero = as.numeric(t0 %*% all_gam[i, , it])
-#     
-#     plt.y = cbind(plt.y, tmp - y.zero)
-#     
-#     
-#     
-#     
-#   }
-#   if (i == 1)
-#     title = expression(paste(p[0], ": 2m temperature (K)"))
-#   else if (i == 2)
-#     title = expression(paste(p[0], ": 3-month SPI"))
-#   pdf(
-#     file = paste0("img/fbp_cov", i, "_p0.pdf"),
-#     width = 8,
-#     height = 5
-#   )
-#   fD =  plt.y
-#   if (sum(is.na(plt.y[1, ])) > 0)
-#     fD = plt.y[, -which(is.na(plt.y[1, ]))]
-#   
-#   
-#   fda::fbplot(
-#     fit = fD,
-#     main = title,
-#     xlab = 'x',
-#     ylab = '' ,
-#     x = plt.x,
-#     xlim = range(plt.x),
-#     ylim = range(plt.y, na.rm = T),
-#     cex.axis = 1.6,
-#     cex.lab = 1.6,
-#     cex.main = 1.6
-#   )
-#   mtext(expression(m[I](x)), 2, cex = 1.6, line = 2.3)
-#   
-#   abline(h = 0, col = "red")
-#   points(knots[i, ],
-#          rep(min(plt.y, na.rm = T), n.knot),
-#          col = "red",
-#          pch = 2)
-#   dev.off()
-#   
-# }
-# 
-# 
-# 
-# print("Created functional boxplots")
+ print("Creating functional boxplots of global p0-PINN estimates")
+ 
+ st = list.files("intermediates/models/p0_global_PINN_fit/")
+ st <- st[which(grepl("additivecoeffs", st))]
+ 
+ 
+ 
+ load(paste0("intermediates/models/p0_global_PINN_fit/", st[1]))
+ 
+ 
+ all_gam = array(dim = c(dim(gam_weights), n.boot))
+ 
+ for (it in 1:n.boot) {
+   load(paste0("intermediates/models/p0_global_PINN_fit/", st[it]))
+   
+   all_gam[, , it] = gam_weights
+   
+   
+ }
+ 
+ 
+ n.knot = 10 # number of knots.
+ X_I_basis  <- array(dim = c(dim(X_I), n.knot))
+ 
+ 
+ temp = c()
+ knots = matrix(nrow = dim(X_I)[4], ncol = n.knot)
+ for (i in 1:dim(X_I)[4]) {
+   #Get knots? Just equally spaced quantiles
+   temp = X_I[, , , i]
+   knots[i, ] = quantile(temp, probs = seq(0, 1, length = n.knot)) #equally spaced quantiles
+ }
+ 
+ # basis function
+ rad = function(x, c) {
+   out = abs(x - c) ^ 2 * log(abs(x - c))
+   out[(x - c) == 0] = 0
+   return(out)
+ }
+ 
+ 
+ bases_min <- bases_range <- matrix(nrow = dim(X_I)[4], ncol =
+                                      n.knot)
+ for (i in 1:dim(X_I)[4]) {
+   for (k in 1:n.knot) {
+     X_I_basis[, , , i, k] = rad(x = X_I[, , , i], c =
+                                   knots[i, k])
+     #Scale radial bases to aid training
+     
+     temp = X_I_basis[, , , i, k]
+     bases_min[i, k] = mean(temp)
+     bases_range[i, k] = sd(temp)
+     
+     X_I_basis[, , , i, k] = (temp - bases_min[i, k]) / bases_range[i, k]
+     
+     
+   }
+ }
+ 
+ 
+ 
+ for (i in 1:dim(knots)[1]) {
+   if (i == 1)
+     plt.x = seq(from = min(knots[i, ]),
+                 to = max(knots[i, ]),
+                 length = 1000)
+   else
+     plt.x = seq(from = min(knots[i, -1]),
+                 to = max(knots[i, ]),
+                 length = 1000)
+   temp = matrix(nrow = length(plt.x), ncol = n.knot)
+   for (j in 1:n.knot) {
+     temp[, j] = rad(plt.x, knots[i, j])
+     temp[, j] = (temp[, j] - bases_min[i, j]) / bases_range[i, j]
+     
+   }
+   
+   t0 = matrix(nrow = 1, ncol = n.knot)
+   for (j in 1:n.knot) {
+     t0[, j] = rad(median(c(X_I[, , , i])), knots[i, j])
+     t0[, j] = (t0[, j] - bases_min[i, j]) / bases_range[i, j]
+   }
+   
+   
+   plt.y = c()
+   for (it in 1:(n.boot)) {
+     tmp = temp %*% as.matrix(all_gam[i, , it])
+     # tmp=tmp-tmp[length(tmp)/2]
+     
+     
+     y.zero = as.numeric(t0 %*% all_gam[i, , it])
+     
+     plt.y = cbind(plt.y, tmp - y.zero)
+     
+     
+     
+     
+   }
+   if (i == 1)
+     title = expression(paste(p[0], ": 2m temperature (K)"))
+   else if (i == 2)
+     title = expression(paste(p[0], ": 3-month SPI"))
+   pdf(
+     file = paste0("img/fbp_cov", i, "_p0.pdf"),
+     width = 6,
+     height = 4
+   )
+   fD =  plt.y
+   if (sum(is.na(plt.y[1, ])) > 0)
+     fD = plt.y[, -which(is.na(plt.y[1, ]))]
+   
+   
+   fda::fbplot(
+     fit = fD,
+     main = title,
+     xlab = 'x',
+     ylab = '' ,
+     x = plt.x,
+     xlim = range(plt.x),
+     ylim = range(plt.y, na.rm = T),
+     cex.axis = 1.6,
+     cex.lab = 1.6,
+     cex.main = 1.6
+   )
+   mtext(expression(m[I](x)), 2, cex = 1.6, line = 2.3)
+   
+   abline(h = 0, col = "red")
+   points(knots[i, ],
+          rep(min(plt.y, na.rm = T), n.knot),
+          col = "red",
+          pch = 2)
+   dev.off()
+   
+ }
+ 
+ 
+ 
+ print("Created functional boxplots")
 
 
 
@@ -515,103 +516,103 @@ months = c("",
            "July",
            "August",
            "September")
-# for (m in 3:9) {
-#   temp = all_p0[seq(m - 2, m - 2 + 22 * 7, by = 7), , , 1, ]
-#   lm.coeff = array(NA, dim = dim(temp)[-1])
-#   for (k in 1:dim(temp)[4]) {
-#     if (!is.na(c(temp[1, 1, 1, k]))) {
-#       for (i in 1:ncol(temp)) {
-#         for (j in 1:dim(temp)[3]) {
-#           fit <- lm(y ~ t, data = data.frame("y" = c(temp[, i, j, k]), "t" = 1:23))
-#           lm.coeff[i, j, k] = fit$coefficients[2]
-#         }
-#       }
-#     }
-#   }
-#   
-#   qmed = apply(lm.coeff, c(1, 2), median, na.rm = T)
-#   ql = apply(lm.coeff,
-#              c(1, 2),
-#              quantile,
-#              prob = 0.025,
-#              na.rm = T)
-#   qu = apply(lm.coeff,
-#              c(1, 2),
-#              quantile,
-#              prob = 0.975,
-#              na.rm = T)
-#   
-#   qmed[Y[m, , ] < 0] = NA
-#   qmed[qu > 0 & ql < 0] = NA
-#   
-# 
-#   pdf(
-#     file = paste0("img/p0_diff_m", m, ".pdf"),
-#     width = 8,
-#     height = 5
-#   )
-#   
-#   c <- 0
-#   c    <- contourplot(
-#     qmed ~  lonlat[, , 1] * lonlat[, , 2],
-#     ylab = "",
-#     xlab = "",
-#     xlim = lon_range,
-#     ylim = lat_range,
-#     xaxt = "n",
-#     scales = list(tck = c(0, 0), draw = F),
-#     colorkey = list(labels = list(cex = 2)),
-#     panel = mappanel,
-#     aspect = 0.625,
-#     region = region,
-#     main = list(cex = 2, label = bquote(p[0]:.(paste(
-#       months[m]
-#     )))),
-#     
-#     contour = contour,
-#     pretty = F,
-#     col.regions = (col2) ,
-#     at = seq(-max(abs(qmed), na.rm = T), max(abs(qmed), na.rm =
-#                                                T), length = 11)
-#   )
-#   print(c)
-#   dev.off()
-#   
-#   pdf(
-#     file = paste0("img/p0_diff_m", m, "_IQR.pdf"),
-#     width = 8,
-#     height = 5
-#   )
-#   qmed = apply(lm.coeff, c(1, 2), IQR, na.rm = T)
-#   
-#   
-#   qmed[Y[m, , ] < 0] = NA
-#   c <- 0
-#   c    <- contourplot(
-#     qmed ~  lonlat[, , 1] * lonlat[, , 2],
-#     ylab = "",
-#     xlab = "",
-#     xlim = lon_range,
-#     ylim = lat_range,
-#     xaxt = "n",
-#     scales = list(tck = c(0, 0), draw = F),
-#     colorkey = list(labels = list(cex = 2)),
-#     panel = mappanel,
-#     aspect = 0.625,
-#     region = region,
-#     main = list(cex = 2, label = bquote(p[0]:.(paste(
-#       months[m]
-#     )))),
-#     
-#     contour = contour,
-#     pretty = F,
-#     col.regions = (col4)
-#   )
-#   print(c)
-#   dev.off()
-#   
-#   print(paste0(months[m]," finished"))
-# }
+ for (m in 3:9) {
+   temp = all_p0[seq(m - 2, m - 2 + 22 * 7, by = 7), , , 1, ]
+   lm.coeff = array(NA, dim = dim(temp)[-1])
+   for (k in 1:dim(temp)[4]) {
+     if (!is.na(c(temp[1, 1, 1, k]))) {
+       for (i in 1:ncol(temp)) {
+         for (j in 1:dim(temp)[3]) {
+           fit <- lm(y ~ t, data = data.frame("y" = c(temp[, i, j, k]), "t" = 1:23))
+           lm.coeff[i, j, k] = fit$coefficients[2]
+         }
+       }
+     }
+   }
+   
+   qmed = apply(lm.coeff, c(1, 2), median, na.rm = T)
+   ql = apply(lm.coeff,
+              c(1, 2),
+              quantile,
+              prob = 0.025,
+              na.rm = T)
+   qu = apply(lm.coeff,
+              c(1, 2),
+              quantile,
+              prob = 0.975,
+              na.rm = T)
+   
+   qmed[Y[m, , ] < 0] = NA
+   qmed[qu > 0 & ql < 0] = NA
+   
+ 
+   pdf(
+     file = paste0("img/p0_diff_m", m, ".pdf"),
+     width = 8,
+     height = 5
+   )
+   
+   c <- 0
+   c    <- contourplot(
+     qmed ~  lonlat[, , 1] * lonlat[, , 2],
+     ylab = "",
+     xlab = "",
+     xlim = lon_range,
+     ylim = lat_range,
+     xaxt = "n",
+     scales = list(tck = c(0, 0), draw = F),
+     colorkey = list(labels = list(cex = 2)),
+     panel = mappanel,
+     aspect = 0.625,
+     region = region,
+     main = list(cex = 2, label = bquote(p[0]:.(paste(
+       months[m]
+     )))),
+     
+     contour = contour,
+     pretty = F,
+     col.regions = (col2) ,
+     at = seq(-max(abs(qmed), na.rm = T), max(abs(qmed), na.rm =
+                                                T), length = 11)
+   )
+   print(c)
+   dev.off()
+   
+   pdf(
+     file = paste0("img/p0_diff_m", m, "_IQR.pdf"),
+     width = 8,
+     height = 5
+   )
+   qmed = apply(lm.coeff, c(1, 2), IQR, na.rm = T)
+   
+   
+   qmed[Y[m, , ] < 0] = NA
+   c <- 0
+   c    <- contourplot(
+     qmed ~  lonlat[, , 1] * lonlat[, , 2],
+     ylab = "",
+     xlab = "",
+     xlim = lon_range,
+     ylim = lat_range,
+     xaxt = "n",
+     scales = list(tck = c(0, 0), draw = F),
+     colorkey = list(labels = list(cex = 2)),
+     panel = mappanel,
+     aspect = 0.625,
+     region = region,
+     main = list(cex = 2, label = bquote(p[0]:.(paste(
+       months[m]
+     )))),
+     
+     contour = contour,
+     pretty = F,
+     col.regions = (col4)
+   )
+   print(c)
+   dev.off()
+   
+   print(paste0(months[m]," finished"))
+ }
 
 
 
@@ -919,182 +920,182 @@ print("Created bGEV SVC estimate plots")
 
 
 
-# print("Creating functional boxplots of global bGEV-PINN estimates")
-# 
-# st = list.files("intermediates/models/bGEV_global_PINN_fit/")
-# st <- st[which(grepl("additivecoeffs", st))]
-# 
-# 
-# load(paste0("intermediates/models/bGEV_global_PINN_fit/", st[1]))
-# 
-# 
-# all_gam_q = array(dim = c(dim(gam_weights_q), n.boot))
-# all_gam_s = array(dim = c(dim(gam_weights_s), n.boot))
-# 
-# 
-# for (it in 1:n.boot) {
-#   load(paste0("intermediates/models/bGEV_global_PINN_fit/", st[it]))
-#   
-#   all_gam_q[, , it] = gam_weights_q
-#   all_gam_s[, , it] = gam_weights_s
-#   
-# }
-# 
-# 
-# 
-# for (i in 1:dim(knots)[1]) {
-#   if (i == 1)
-#     plt.x = seq(from = min(knots[i, ]),
-#                 to = max(knots[i, ]),
-#                 length = 1000)
-#   else
-#     plt.x = seq(from = min(knots[i, -1]),
-#                 to = max(knots[i, ]),
-#                 length = 1000)
-#   temp = matrix(nrow = length(plt.x), ncol = n.knot)
-#   for (j in 1:n.knot) {
-#     temp[, j] = rad(plt.x, knots[i, j])
-#     temp[, j] = (temp[, j] - bases_min[i, j]) / bases_range[i, j]
-#     
-#   }
-#   
-#   t0 = matrix(nrow = 1, ncol = n.knot)
-#   for (j in 1:n.knot) {
-#     t0[, j] = rad(median(c(X_I[, , , i])), knots[i, j])
-#     t0[, j] = (t0[, j] - bases_min[i, j]) / bases_range[i, j]
-#   }
-#   
-#   
-#   plt.y = c()
-#   for (it in 1:(n.boot)) {
-#     tmp = temp %*% as.matrix(all_gam_q[i, , it])
-#     # tmp=tmp-tmp[length(tmp)/2]
-#     
-#     
-#     y.zero = as.numeric(t0 %*% all_gam_q[i, , it])
-#     
-#     plt.y = cbind(plt.y, tmp - y.zero)
-#     
-#     
-#     
-#     
-#   }
-#   if (i == 1)
-#     title = expression(paste(q[alpha], ": 2m temperature (K)"))
-#   else if (i == 2)
-#     title = expression(paste(q[alpha], ": 3-month SPI"))
-#   pdf(
-#     file = paste0("img/fbp_cov", i, "_q.pdf"),
-#     width = 8,
-#     height = 5
-#   )
-#   fD =  plt.y
-#   if (sum(is.na(plt.y[1, ])) > 0)
-#     fD = plt.y[, -which(is.na(plt.y[1, ]))]
-#   
-#   
-#   fda::fbplot(
-#     fit = fD,
-#     main = title,
-#     xlab = 'x',
-#     ylab = '' ,
-#     x = plt.x,
-#     xlim = range(plt.x),
-#     ylim = range(plt.y, na.rm = T),
-#     cex.axis = 1.6,
-#     cex.lab = 1.6,
-#     cex.main = 1.6
-#   )
-#   mtext(expression(m[I](x)), 2, cex = 1.6, line = 2.3)
-#   
-#   abline(h = 0, col = "red")
-#   points(knots[i, ],
-#          rep(min(plt.y, na.rm = T), n.knot),
-#          col = "red",
-#          pch = 2)
-#   dev.off()
-#   
-# }
-# 
-# 
-# 
-# for (i in 1:dim(knots)[1]) {
-#   if (i == 1)
-#     plt.x = seq(from = min(knots[i, ]),
-#                 to = max(knots[i, ]),
-#                 length = 1000)
-#   else
-#     plt.x = seq(from = min(knots[i, -1]),
-#                 to = max(knots[i, ]),
-#                 length = 1000)
-#   temp = matrix(nrow = length(plt.x), ncol = n.knot)
-#   for (j in 1:n.knot) {
-#     temp[, j] = rad(plt.x, knots[i, j])
-#     temp[, j] = (temp[, j] - bases_min[i, j]) / bases_range[i, j]
-#     
-#   }
-#   
-#   t0 = matrix(nrow = 1, ncol = n.knot)
-#   for (j in 1:n.knot) {
-#     t0[, j] = rad(median(c(X_I[, , , i])), knots[i, j])
-#     t0[, j] = (t0[, j] - bases_min[i, j]) / bases_range[i, j]
-#   }
-#   
-#   
-#   plt.y = c()
-#   for (it in 1:(n.boot)) {
-#     tmp = temp %*% as.matrix(all_gam_s[i, , it])
-#     # tmp=tmp-tmp[length(tmp)/2]
-#     
-#     
-#     y.zero = as.numeric(t0 %*% all_gam_s[i, , it])
-#     
-#     plt.y = cbind(plt.y, tmp - y.zero)
-#     
-#     
-#     
-#     
-#   }
-#   if (i == 1)
-#     title = expression(paste(s[beta], ": 2m temperature (K)"))
-#   else if (i == 2)
-#     title = expression(paste(s[beta], ": 3-month SPI"))
-#   pdf(
-#     file = paste0("img/fbp_cov", i, "_s.pdf"),
-#     width = 8,
-#     height = 5
-#   )
-#   fD =  plt.y
-#   if (sum(is.na(plt.y[1, ])) > 0)
-#     fD = plt.y[, -which(is.na(plt.y[1, ]))]
-#   
-#   
-#   fda::fbplot(
-#     fit = fD,
-#     main = title,
-#     xlab = 'x',
-#     ylab = '' ,
-#     x = plt.x,
-#     xlim = range(plt.x),
-#     ylim = range(plt.y, na.rm = T),
-#     cex.axis = 1.6,
-#     cex.lab = 1.6,
-#     cex.main = 1.6
-#   )
-#   mtext(expression(m[I](x)), 2, cex = 1.6, line = 2.3)
-#   
-#   abline(h = 0, col = "red")
-#   points(knots[i, ],
-#          rep(min(plt.y, na.rm = T), n.knot),
-#          col = "red",
-#          pch = 2)
-#   dev.off()
-#   
-# }
-# 
-# 
-# 
-# print("Created functional boxplots")
+ print("Creating functional boxplots of global bGEV-PINN estimates")
+ 
+ st = list.files("intermediates/models/bGEV_global_PINN_fit/")
+ st <- st[which(grepl("additivecoeffs", st))]
+ 
+ 
+ load(paste0("intermediates/models/bGEV_global_PINN_fit/", st[1]))
+ 
+ 
+ all_gam_q = array(dim = c(dim(gam_weights_q), n.boot))
+ all_gam_s = array(dim = c(dim(gam_weights_s), n.boot))
+ 
+ 
+ for (it in 1:n.boot) {
+   load(paste0("intermediates/models/bGEV_global_PINN_fit/", st[it]))
+   
+   all_gam_q[, , it] = gam_weights_q
+   all_gam_s[, , it] = gam_weights_s
+   
+ }
+ 
+ 
+ 
+ for (i in 1:dim(knots)[1]) {
+   if (i == 1)
+     plt.x = seq(from = min(knots[i, ]),
+                 to = max(knots[i, ]),
+                 length = 1000)
+   else
+     plt.x = seq(from = min(knots[i, -1]),
+                 to = max(knots[i, ]),
+                 length = 1000)
+   temp = matrix(nrow = length(plt.x), ncol = n.knot)
+   for (j in 1:n.knot) {
+     temp[, j] = rad(plt.x, knots[i, j])
+     temp[, j] = (temp[, j] - bases_min[i, j]) / bases_range[i, j]
+     
+   }
+   
+   t0 = matrix(nrow = 1, ncol = n.knot)
+   for (j in 1:n.knot) {
+     t0[, j] = rad(median(c(X_I[, , , i])), knots[i, j])
+     t0[, j] = (t0[, j] - bases_min[i, j]) / bases_range[i, j]
+   }
+   
+   
+   plt.y = c()
+   for (it in 1:(n.boot)) {
+     tmp = temp %*% as.matrix(all_gam_q[i, , it])
+     # tmp=tmp-tmp[length(tmp)/2]
+     
+     
+     y.zero = as.numeric(t0 %*% all_gam_q[i, , it])
+     
+     plt.y = cbind(plt.y, tmp - y.zero)
+     
+     
+     
+     
+   }
+   if (i == 1)
+     title = expression(paste(q[alpha], ": 2m temperature (K)"))
+   else if (i == 2)
+     title = expression(paste(q[alpha], ": 3-month SPI"))
+   pdf(
+     file = paste0("img/fbp_cov", i, "_q.pdf"),
+     width = 6,
+     height = 4
+   )
+   fD =  plt.y
+   if (sum(is.na(plt.y[1, ])) > 0)
+     fD = plt.y[, -which(is.na(plt.y[1, ]))]
+   
+   
+   fda::fbplot(
+     fit = fD,
+     main = title,
+     xlab = 'x',
+     ylab = '' ,
+     x = plt.x,
+     xlim = range(plt.x),
+     ylim = range(plt.y, na.rm = T),
+     cex.axis = 1.6,
+     cex.lab = 1.6,
+     cex.main = 1.6
+   )
+   mtext(expression(m[I](x)), 2, cex = 1.6, line = 2.3)
+   
+   abline(h = 0, col = "red")
+   points(knots[i, ],
+          rep(min(plt.y, na.rm = T), n.knot),
+          col = "red",
+          pch = 2)
+   dev.off()
+   
+ }
+ 
+ 
+ 
+ for (i in 1:dim(knots)[1]) {
+   if (i == 1)
+     plt.x = seq(from = min(knots[i, ]),
+                 to = max(knots[i, ]),
+                 length = 1000)
+   else
+     plt.x = seq(from = min(knots[i, -1]),
+                 to = max(knots[i, ]),
+                 length = 1000)
+   temp = matrix(nrow = length(plt.x), ncol = n.knot)
+   for (j in 1:n.knot) {
+     temp[, j] = rad(plt.x, knots[i, j])
+     temp[, j] = (temp[, j] - bases_min[i, j]) / bases_range[i, j]
+     
+   }
+   
+   t0 = matrix(nrow = 1, ncol = n.knot)
+   for (j in 1:n.knot) {
+     t0[, j] = rad(median(c(X_I[, , , i])), knots[i, j])
+     t0[, j] = (t0[, j] - bases_min[i, j]) / bases_range[i, j]
+   }
+   
+   
+   plt.y = c()
+   for (it in 1:(n.boot)) {
+     tmp = temp %*% as.matrix(all_gam_s[i, , it])
+     # tmp=tmp-tmp[length(tmp)/2]
+     
+     
+     y.zero = as.numeric(t0 %*% all_gam_s[i, , it])
+     
+     plt.y = cbind(plt.y, tmp - y.zero)
+     
+     
+     
+     
+   }
+   if (i == 1)
+     title = expression(paste(s[beta], ": 2m temperature (K)"))
+   else if (i == 2)
+     title = expression(paste(s[beta], ": 3-month SPI"))
+   pdf(
+     file = paste0("img/fbp_cov", i, "_s.pdf"),
+     width = 6,
+     height = 4
+   )
+   fD =  plt.y
+   if (sum(is.na(plt.y[1, ])) > 0)
+     fD = plt.y[, -which(is.na(plt.y[1, ]))]
+   
+   
+   fda::fbplot(
+     fit = fD,
+     main = title,
+     xlab = 'x',
+     ylab = '' ,
+     x = plt.x,
+     xlim = range(plt.x),
+     ylim = range(plt.y, na.rm = T),
+     cex.axis = 1.6,
+     cex.lab = 1.6,
+     cex.main = 1.6
+   )
+   mtext(expression(m[I](x)), 2, cex = 1.6, line = 2.3)
+   
+   abline(h = 0, col = "red")
+   points(knots[i, ],
+          rep(min(plt.y, na.rm = T), n.knot),
+          col = "red",
+          pch = 2)
+   dev.off()
+   
+ }
+ 
+ 
+ 
+ print("Created functional boxplots")
 
 
 
@@ -1458,6 +1459,9 @@ for (m in 3:9) {
                        contour=contour, pretty=F,   col.regions=(col4) )
   print(c)
   dev.off()
+  
+  print(paste0(months[m]," finished"))
+
 }
 
 
