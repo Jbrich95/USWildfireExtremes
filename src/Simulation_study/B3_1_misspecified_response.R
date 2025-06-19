@@ -66,7 +66,7 @@ if (case == 1) {
     threshs[i] = qlnorm(0.99, mu[i], s[i])
   
   
-  X = rlnorm(n, mu, s)
+  Y = rlnorm(n, mu, s)
 } else if (case == 2) {
   mu = rep(0, n)
   s = exp(s_b_1 - 3 * nn.part.s)
@@ -74,10 +74,10 @@ if (case == 1) {
   
   threshs = rep(NA, n)
   for (i in 1:length(threshs))
-    threshs[i] = qgpd(0.99, loc = mu[i], s[i], shape = 0.1)
+    threshs[i] = evd::qgpd(0.99, loc = mu[i], s[i], shape = 0.1)
   
   
-  X = rgpd(n, loc = mu, s, shape = 0.1)
+  Y = evd::rgpd(n, loc = mu, s, shape = 0.1)
 }
 
 
@@ -95,7 +95,7 @@ set_random_seed(1)
 
 
 
-Y_train = as.matrix(X)
+Y_train = as.matrix(Y)
 u_train = as.matrix(threshs)
 #Split up linear and GAM inputs for spread and location
 X_train_lin = cov[, 1:2]
@@ -281,10 +281,10 @@ checkpoint <- callback_model_checkpoint(
 
 
 history <- model %>% fit(
-  list(X_train_lin, X_I_basis, X_train_nn, u_train),
+  list( X_train_nn, u_train),
   Y_train,
-  epochs = 100,
-  batch_size = 64,
+  epochs = 250,
+  batch_size = 1024,
   validation_split = 0.2,
   callback = list(
     checkpoint,
@@ -311,27 +311,27 @@ model <- load_model_weights_tf(model,
 predictions <- model %>% predict(list(X_train_nn, u_train))
 
 
-pred_xi = predictions[, , 4]
-pred_u = predictions[, , 1]
-pred_loc = predictions[, , 2]
-pred_spread = predictions[, , 3]
+pred_xi = predictions[,  4]
+pred_u = predictions[,  1]
+pred_loc = predictions[ , 2]
+pred_spread = predictions[ , 3]
 
 
 metric = 0
 n_inf = 0
 for (p in seq(0.99, 0.9999, length = 200)) {
-  for (i in 1:nrow(pred_xi)) {
+  for (i in 1:length(pred_xi)) {
     if (case == 1) {
-      the_q = qlnorm(p, meanlog = mu[i, ], sdlog = s[i, ])
+      the_q = qlnorm(p, meanlog = mu[i ], sdlog = s[i ])
       
     } else if (case == 2) {
       the_q = qgpd(p,
-                   loc = mu[i, ],
-                   scale = s[i, ],
+                   loc = mu[i ],
+                   scale = s[i ],
                    shape = 0.1)
       
     }
-    pred_p = apply(cbind(pred_loc[i, ], pred_spread[i, ], pred_xi[i, ], the_q), 1, function(x) {
+    pred_p = apply(cbind(pred_loc[i ], pred_spread[i], pred_xi[i ], the_q), 1, function(x) {
       # (
       (1 / 12) * (
         pbGEV(
@@ -369,7 +369,7 @@ print(stLS)
 
 save(stLS,
      file = paste0(
-       "intemediates/scores/simulation_B3_1/rep",
+       "intermediates/scores/simulation_B3_1/rep",
        rep,
        "_n",
        n,

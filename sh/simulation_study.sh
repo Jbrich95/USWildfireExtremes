@@ -58,7 +58,7 @@ echo ""
 read n
 
 echo ""
-echo "Please enter the case ID (1=GPD, 2=log-normal)"
+echo "Please enter the case ID (1=log-normal, 2=GPD)"
 echo ""
 read case_id
 

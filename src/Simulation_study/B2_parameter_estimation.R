@@ -339,8 +339,8 @@ checkpoint <- callback_model_checkpoint(
 history <- model %>% fit(
   list(X_train_lin, X_I_basis, X_train_nn, u_train),
   Y_train,
-  epochs = 100,
-  batch_size = 64,
+  epochs = 250,
+  batch_size = 1024,
   validation_split = 0.2,
   callback = list(
     checkpoint,
@@ -513,7 +513,7 @@ for (i in 1:dim(knots)[1]) {
 
 save(metrics,
      file = paste0(
-       "intemediates/scores/simulation_B2/rep",
+       "intermediates/scores/simulation_B2/rep",
        rep,
        "_n",
        n,

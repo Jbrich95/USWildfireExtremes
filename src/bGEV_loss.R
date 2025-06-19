@@ -142,7 +142,7 @@ bGEV_loss <- function(y_true, y_pred) {
   s_b = y_pred[all_dims(), 3]
   xi = y_pred[all_dims(), 4]
   
-  y <- y_true
+  y <- y_true[all_dims(), 1]
   
   
   # Find inds of non-missing obs.  Remove missing obs, i.e., -1e10. This is achieved by adding an
