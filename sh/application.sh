@@ -32,7 +32,7 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 fi
 	
 echo ""
-echo "Do you wish to train the probability of fire, p_0(s,t), models> (y/n)"
+echo "Do you wish to train the probability of fire, p_0(s,t), models? (y/n)"
 echo ""
 read bool
 
@@ -78,7 +78,7 @@ fi
 
 
 echo ""
-echo "Do you wish to train the burnt area, Y(s,t)| Y(s,t) >0, models> (y/n)"
+echo "Do you wish to train the burnt area, Y(s,t)| Y(s,t) >0, models? (y/n)"
 echo ""
 read bool
 
