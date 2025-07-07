@@ -6,7 +6,7 @@ l0 = function(a) {
   log(-log(a))
 }
 
-
+Tmax = 100
 Fthreshinv = function(u, mu, sig, xi) {
   a = -Tmax
   b = Tmax
