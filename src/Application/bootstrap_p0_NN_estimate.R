@@ -32,7 +32,7 @@ b[b>10] = 10 # Set max block size to 10 to mitigate RAM issues
 b = b[1:min(which(cumsum(b) >= N))]
 
 #Find starting indices
-inds = sample(1:N, length(b))
+inds = sample(1:N, length(b), replace = T)
 all_inds = c()
 for (i in 1:length(b)) {
   block_inds = inds[i]:(inds[i] + b[i] - 1)

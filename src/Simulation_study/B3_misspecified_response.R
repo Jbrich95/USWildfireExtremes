@@ -45,7 +45,24 @@ for (i in 1:dim(X)[4]) {
   
 }
 
-time.inds = sample(1:dim(X)[1], n, replace = T)
+#Find starting indices
+N = dim(Y)[1]
+inds = sample(1:N, length(b), replace = T)
+all_inds = c()
+for (i in 1:length(b)) {
+  block_inds = inds[i]:(inds[i] + b[i] - 1)
+  
+  #Wrap around indices
+  if (sum(block_inds > N) > 0) {
+    block_inds[block_inds > N] = 1:sum(block_inds > N)
+  }
+  all_inds = c(all_inds, block_inds)
+  
+}
+b[length(b)] = b[length(b)] + (n - sum(b))
+
+# Cut down to n only
+time.inds = all_inds[1:n]
 cov.inds = 1:10
 
 X = X[time.inds, , , cov.inds]
