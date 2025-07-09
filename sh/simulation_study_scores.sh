@@ -27,7 +27,6 @@ fi
 
 if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	Rscript src/Simulation_study/collate_results.R;
-
 fi
 	
 

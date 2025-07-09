@@ -45,6 +45,12 @@ for (i in 1:dim(X)[4]) {
   
 }
 
+#Block bootstrap time inds
+#Generate random block sizes
+mean.block.size = 2
+b = rgeom(n, 1 / (mean.block.size)) + 1
+b = b[1:min(which(cumsum(b) >= n))]
+
 #Find starting indices
 N = dim(Y)[1]
 inds = sample(1:N, length(b), replace = T)
@@ -81,12 +87,11 @@ nn.part.q = 10+0.1 * (
 )
 
 nn.part.s = 0.1 * (
-  X[,,, 5] * X[,,, 6] * 0.7 - 5 + X[,,, 6] * (1 - cos(pi * X[,,, 6] * X[,,, 7])) +
+  X[,,, 5] * X[,,, 6] * 0.7 - 10 + X[,,, 6] * (1 - cos(pi * X[,,, 6] * X[,,, 7])) +
     3 * sin(X[,,, 7]) / (abs(X[,,, 7] - X[,,, 8]) + 2)
   + 0.2 * (X[,,, 8] + X[,,, 8] * X[,,, 9] / 2 - 1) ^ 2 - exp(rowSums(X[,,, 5:10] /
                                                                        10 - 3))
 )
-
 
 
 if (case == 1) {
@@ -194,7 +199,7 @@ xiBranch <- input_nn %>% layer_dense(
 
 k1 <- 3 # kernel dimension
 k2 <- 3
-nunits = c(8,8,8) # CNN units
+nunits = c(16,16,16) # CNN units
 
 
 #NN location branch
