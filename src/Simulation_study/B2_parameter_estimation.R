@@ -487,8 +487,8 @@ print(paste0("Spread Regression coefficients:"))
 print(paste0("Estimated:"))
 print(c(linear_coeffs[[1]]))
 print(paste0("True:"))
-print(c(s_b_2, s_b_3))
-metrics[2, 1:2] = (c(linear_coeffs[[1]]) - c(s_b_2, s_b_3)) ^ 2
+print(c(s_b_1, s_b_2))
+metrics[2, 1:2] = (c(linear_coeffs[[1]]) - c(s_b_1, s_b_2)) ^ 2
 
 
 linear_coeffs = model$get_layer("lin_loc")$get_weights()
@@ -497,8 +497,8 @@ print(paste0("Loc Regression coefficients:"))
 print(paste0("Estimated:"))
 print(c(linear_coeffs[[1]]))
 print(paste0("True:"))
-print(c(q_a_2, q_a_3))
-metrics[1, 1:2] = (c(linear_coeffs[[1]]) - c(q_a_2, q_a_3)) ^ 2
+print(c(q_a_1, q_a_2))
+metrics[1, 1:2] = (c(linear_coeffs[[1]]) - c(q_a_1, q_a_2)) ^ 2
 
 
 #GAM parts

@@ -350,7 +350,7 @@ for (p in seq(0.99, 0.9999, length = 100)) {
       the_q = evd::qgpd(p,
                         loc = mus[i],
                         scale = sigs[i],
-                        shape = 0.1)
+                        shape = 0.3)
       
     } else if (case == 2) {
       the_q = qlnorm(p, meanlog = mus[i], sdlog = sigs[i])
