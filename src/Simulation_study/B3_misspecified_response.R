@@ -24,14 +24,7 @@ p_b = 0.2
 xi = 0.2
 
 # which case?
-if (case == 1) {
-  q_a_1 = 0
-  s_b_1 = log(1 / 2)
-}
-if (case == 2) {
-  q_a_1 = 0
-  s_b_1 = 0.5
-}
+
 
 
 load("data/df_application.Rdata")
@@ -94,16 +87,15 @@ nn.part.s = 0.1 * (
 )
 
 
+
 if (case == 1) {
-  mus = q_a_1 + 0.2 * nn.part.q
-  
-  sigs = rep(exp(s_b_1), length(mus))
-  dim(sigs) = dim(mus)
-} else if (case == 2) {
-  
-  sigs = exp(s_b_1 - 3 * nn.part.s)
+  sigs = exp(0.5 - 3 * nn.part.s)
   mus = rep(0, length(sigs))
   dim(mus) = dim(sigs)
+} else if (case == 2) {
+  mus =  5+0.2 * nn.part.s
+  sigs = rep(0.5, length(mus))
+  dim(sigs) = dim(mus)
   
 }
 if(length(time.inds)==1) dim(mus) = c(1,dim(mus))
@@ -114,12 +106,11 @@ if(length(time.inds)==1) dim(sigs) = c(1,dim(sigs))
 threshs = mus
 if (case == 1) {
   for (i in 1:length(threshs))
-    threshs[i] = qlnorm(0.8, mus[i], sigs[i])
-  
-} else if (case == 2) {
-  for (i in 1:length(threshs))
     threshs[i] = evd::qgpd(0.8, loc = mus[i], sigs[i], shape = 0.1)
-  
+} else if (case == 2) {
+ 
+  for (i in 1:length(threshs))
+    threshs[i] = qlnorm(0.8, mus[i], sigs[i])
 }
 
 Y = threshs
@@ -127,12 +118,13 @@ Y = threshs
 # Generate response data
 for (j in 1:length(Y)) {
   if (case == 1) {
-    Y[j] = rlnorm(1, mus[j], sigs[j])
-  } else if (case == 2) {
     Y[j] = evd::rgpd(n,
                      loc = mus[j],
                      scale = sigs[j],
-                     shape = 0.1)
+                     shape = 0.3)
+  } else if (case == 2) {
+    Y[j] = rlnorm(1, mus[j], sigs[j])
+   
   }
 }
 
@@ -355,13 +347,14 @@ n_inf = 0
 for (p in seq(0.99, 0.9999, length = 100)) {
   for (i in 1:length(pred_xi)) {
     if (case == 1) {
-      the_q = qlnorm(p, meanlog = mus[i ], sdlog = sigs[i ])
+      the_q = evd::qgpd(p,
+                        loc = mus[i],
+                        scale = sigs[i],
+                        shape = 0.1)
       
     } else if (case == 2) {
-      the_q = evd::qgpd(p,
-                   loc = mus[i ],
-                   scale = sigs[i ],
-                   shape = 0.1)
+      the_q = qlnorm(p, meanlog = mus[i], sdlog = sigs[i])
+     
       
     }
     pred_p = apply(cbind(pred_loc[i ], pred_spread[i], pred_xi[i ], the_q), 1, function(x) {

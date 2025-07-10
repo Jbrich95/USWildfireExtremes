@@ -1,5 +1,4 @@
 
-Tmax = 100
 source("src/extremal_pp_functions.R")
 
 
@@ -9,7 +8,7 @@ args = commandArgs(trailingOnly = T)
 
 rep = as.numeric(args[1])
 n = as.numeric(args[2])
-
+case = as.numeric(args[3])
 set.seed(rep)
 
 # Set hyper-parameters
@@ -20,62 +19,127 @@ p_a = 0.05
 p_b = 0.2
 xi = 0.2
 
-q_a_1 = 1
-q_a_2 = 0
-q_a_3 = -0.5
-s_b_1 = -0.5
-s_b_2 = 0
-s_b_3 = 0.3
 
-Cor = matrix(0.5, nrow = 10, ncol = 10)
-diag(Cor) = 1
-cov = mvnfast::rmvn(n, rep(0, 10), sigma = Cor)
+
+
+load("data/df_application.Rdata")
+#Standardise each feature map - Only for non-masked values
+
+for (i in 1:dim(X)[4]) {
+  tmp = X[, , , i]
+  m = mean(tmp)
+  s = sd(tmp)
+  X[, , , i] =  (tmp - m) / s
+  
+}
+
+#Block bootstrap time inds
+#Generate random block sizes
+mean.block.size = 2
+b = rgeom(n, 1 / (mean.block.size)) + 1
+b = b[1:min(which(cumsum(b) >= n))]
+
+#Find starting indices
+N = dim(Y)[1]
+inds = sample(1:N, length(b), replace = T)
+all_inds = c()
+for (i in 1:length(b)) {
+  block_inds = inds[i]:(inds[i] + b[i] - 1)
+  
+  #Wrap around indices
+  if (sum(block_inds > N) > 0) {
+    block_inds[block_inds > N] = 1:sum(block_inds > N)
+  }
+  all_inds = c(all_inds, block_inds)
+  
+}
+b[length(b)] = b[length(b)] + (n - sum(b))
+
+# Cut down to n only
+time.inds = all_inds[1:n]
+
+cov.inds = 1:10
+
+X_orig = X
+X = X[time.inds, , , cov.inds]
+if(length(time.inds)==1) dim(X) = c(1,dim(X))
+dim(X) = c(length(time.inds), dim(Y)[2:3], 10)
+
+
+
+# Linear coefficients
+
+if(case == 1){
+  q_a_1 = 0.8
+  q_a_2 = 2
+  s_b_1 = 0.4
+  s_b_2 = -0.2
+  
+  # Additive parts
+  gam.part.q1 = 0.2*(0.1*X[,,,3]^3-X[,,,3]^2+X[,,,3])
+  gam.part.q2 = 0.2*(-0.4*X[,,,4]^3-2*X[,,,4])
+  gam.part.s1 = 0.2*(0.1*X[,,,3]^3-0.1*X[,,,3]^2+X[,,,3])
+  gam.part.s2 = 0.2*(-0.1*X[,,,4]^3+0.2*X[,,,4]^2-0.5*X[,,,4])
+}
+if(case == 2){
+q_a_1 = 0
+q_a_2 = -2
+s_b_1 = 0
+s_b_2 = 0.3
 
 # Additive parts
 gam.part.q1 = 0
-gam.part.q2 = cov[, 4]
+gam.part.q2 = X[,,, 4]
 gam.part.s1 = 0
-gam.part.s2 = 0.2 * (0.1 * cov[, 4] ^ 3 - 0.3 * cov[, 4] ^ 2 - cov[, 4])
+gam.part.s2 = 0.5 * (0.1 * X[,,, 4] ^ 3 - 0.3 * X[, ,,4] ^ 2 - X[,,, 4])
+}
 
 # NN parts
-nn.part.q = 0.1 * (
-  cov[, 5] * cov[, 6] + cov[, 6] * (1 - cos(pi * cov[, 6] * cov[, 7])) + 2 *
-    sin(cov[, 7]) / (abs(cov[, 7] - cov[, 8]) + 2)
-  + 0.2 * (cov[, 8] + cov[, 8] * cov[, 9] / 2) ^ 2 - sqrt(cov[, 9] ^
-                                                            2 + cov[, 10] ^ 2 + 2)
-  + exp(rowSums(cov[, 5:10] / 10 - 2))
+nn.part.q = 10+0.1 * (
+  X[,,, 5] * X[,,, 6] + X[,,, 6] * (1 - cos(pi * X[,,, 6] * X[,,, 7])) + 2 *
+    sin(X[,,, 7]) / (abs(X[,,, 7] - X[,,, 8]) + 2)
+  + 0.2 * (X[,,, 8] + X[,,, 8] * X[,,, 9] / 2) ^ 2 - sqrt(X[,,, 9] ^
+                                                            2 + X[,,, 10] ^ 2 + 2)
+  + exp(rowSums(X[,,, 5:10] / 10 - 2))
 )
 
 nn.part.s = 0.1 * (
-  cov[, 5] * cov[, 6] * 0.7 - 5 + cov[, 6] * (1 - cos(pi * cov[, 6] * cov[, 7])) +
-    3 * sin(cov[, 7]) / (abs(cov[, 7] - cov[, 8]) + 2)
-  + 0.2 * (cov[, 8] + cov[, 8] * cov[, 9] / 2 - 1) ^ 2 - exp(rowSums(cov[, 5:10] /
+  X[,,, 5] * X[,,, 6] * 0.7 - 10 + X[,,, 6] * (1 - cos(pi * X[,,, 6] * X[,,, 7])) +
+    3 * sin(X[,,, 7]) / (abs(X[,,, 7] - X[,,, 8]) + 2)
+  + 0.2 * (X[,,, 8] + X[,,, 8] * X[,,, 9] / 2 - 1) ^ 2 - exp(rowSums(X[,,, 5:10] /
                                                                        10 - 3))
 )
 
 # Get full PINN parameters
-q_a = q_a_1 + q_a_2 * cov[, 1] + q_a_3 * cov[, 2] + gam.part.q1 + gam.part.q2 +
+q_a =  q_a_1 * X[,,, 1] + q_a_2 * X[,,, 2] + gam.part.q1 + gam.part.q2 +
   nn.part.q
-s_b = exp(s_b_1 + s_b_2 * cov[, 1] + s_b_3 * cov[, 2] + gam.part.s1 + gam.part.s2 +
+s_b = exp( s_b_1 * X[,,, 1] + s_b_2 * X[,,, 2] + gam.part.s1 + gam.part.s2 +
             nn.part.s)
 
+# Map back to the mu and sigma of the usual PP parameterisation
 mus = q_a - s_b * (l(alpha, xi) - 1) / (l(1 - beta / 2, xi) - l(beta / 2, xi))
 sigs = xi * s_b / ((l(1 - beta / 2, xi) - l(beta / 2, xi)))
 
-# Get theoretical 0.99 exceedance quantiles
-threshs = rep(NA, n)
+if(length(time.inds)==1) dim(mus) = c(1,dim(mus))
+if(length(time.inds)==1) dim(sigs) = c(1,dim(sigs))
+
+# Get theoretical 0.8 exceedance quantiles
+threshs = mus
 for (i in 1:length(threshs))
-  threshs[i] = Fthreshinv(0.99, mus[i], sigs[i], xi)
+  threshs[i] = Fthreshinv(0.8, mus[i], sigs[i], xi)
 
 
-X <- U <- as.matrix(runif(n))
+U <- as.matrix(runif(prod(dim(mus))))
+dim(U) = dim(mus)
 
-X[U < 0.99] = threshs[U < 0.99] - 1
+Y <- U
 
-exceed.inds = which(U >= 0.99)
+Y[U < 0.8] = threshs[U < 0.8] - 1
+
+exceed.inds = which(U >= 0.8)
 for (j in 1:length(exceed.inds)) {
   exceedance = Ftinv(U[exceed.inds[j]], mus[exceed.inds[j]], sigs[exceed.inds[j]], xi, threshs[exceed.inds[j]])
-  X[exceed.inds[j]] = exceedance + threshs[exceed.inds[j]]
+  Y[exceed.inds[j]] = exceedance + threshs[exceed.inds[j]]
   
 }
 
@@ -92,81 +156,102 @@ set_random_seed(1)
 
 
 
-Y_train = as.matrix(X)
-u_train = as.matrix(threshs)
+dim(Y) = c(dim(Y),1)
+dim(threshs) = c(dim(threshs),1)
+valid.inds = sample(1:length(Y), length(Y)/5, replace = F, )
+
+Y_train <- Y_valid <-Y
+
+Y_train[valid.inds] = -1e10
+Y_valid[-valid.inds] = -1e10
+
+
 #Split up linear and GAM inputs for spread and location
-X_train_lin = cov[, 1:2]
-X_train_add = cov[, 3:4]
+X_L = X[, , , 1:2]
+X_A = X[, , , 3:4]
+X_A_orig = X_orig[, , , 3:4]
+X_N = X[, , , -c(1, 2, 3, 4)]
 
-X_train_nn = cov[, -c(1, 2, 3, 4)]
+if(length(time.inds)==1)
+  dim(X_L) = c(1, dim(X_L))
+if (length(time.inds) == 1)
+  dim(X_A) = c(1, dim(X_A))
+if (length(time.inds) == 1)
+  dim(X_N) = c(1, dim(X_N)
+  )
 
 
 
+# Get knot evaluations
+n.knot = 10 # number of knots.
+X_A_basis  <- array(dim = c(dim(X_A), n.knot))
 
-# Reshape additives
-n.knot = 20 # number of knots. Same for each predictor?
-X_I_basis = array(dim = c(dim(X_train_add), n.knot))
 
-knots = matrix(nrow = dim(X_train_add)[2], ncol = n.knot)
-for (i in 1:dim(X_train_add)[2]) {
-  temp = c(X_train_add[, i])
-  
-  knots[i, ] = quantile(temp, probs = seq(0, 1, length = n.knot))
-  
+temp = c()
+knots = matrix(nrow = dim(X_A)[4], ncol = n.knot)
+for (i in 1:dim(X_A)[4]) {
+  #Get knots? Just equally spaced quantiles
+  temp = X_A[, , , i]
+  knots[i, ] = quantile(temp, probs = seq(0, 1, length = n.knot)) #equally spaced quantiles
 }
 
-#Get basis functions
+# basis function
 rad = function(x, c) {
   out = abs(x - c) ^ 2 * log(abs(x - c))
   out[(x - c) == 0] = 0
   return(out)
 }
-bases_min <- bases_range <- matrix(nrow = dim(X_train_add)[2], ncol = n.knot)
-for (i in 1:dim(X_train_add)[2]) {
+
+
+bases_min <- bases_range <- matrix(nrow = dim(X_A)[4], ncol =
+                                     n.knot)
+for (i in 1:dim(X_A)[4]) {
   for (k in 1:n.knot) {
-    X_I_basis[,  i, k] = rad(x = X_train_add[ , i], c = knots[i, k])
+    X_A_basis[, , , i, k] = rad(x = X_A[, , , i], c =
+                                  knots[i, k])
     #Scale radial bases to aid training
     
-    temp = c(X_I_basis[,  i, k])
-    bases_min[i, k] = min(temp)
-    bases_range[i, k] = max(temp) - min(temp)
+    temp = X_A_basis[, , , i, k]
+    bases_min[i, k] = mean(temp)
+    bases_range[i, k] = sd(temp)
     
-    X_I_basis[,  i, k] = (X_I_basis[,  i, k] -
-                             bases_min[i, k]) / bases_range[i, k]
+    X_A_basis[, , , i, k] = (temp - bases_min[i, k]) / bases_range[i, k]
+    
+    
   }
 }
+
 
 
 
 # Build Keras model
 
 # Input X_N for q and s
-input_nn <- layer_input(shape = dim(X_train_nn)[2], name = 'nn_input')
-
-# Additive input for GAM model
-
-input_add <- layer_input(shape = dim(X_I_basis)[2:3], name = 'additive_input')
-
-#Linear input
-input_lin <- layer_input(shape = dim(X_train_lin)[2], name = 'linear_input')
+input_nn <- layer_input(shape = dim(X_N)[2:4], name = 'nn_input')
 
 
 # Input exceedance threshold
-input_u <- layer_input(shape = dim(u_train)[2], name = 'u_input')
+input_u <- layer_input(shape = dim(threshs)[2:4], name = 'u_input')
 
+
+# Additive input for GAM model
+input_additive <- layer_input(shape = dim(X_A_basis)[2:5], name = 'additive_input')
+
+#Linear input
+input_linear <- layer_input(shape = dim(X_L)[2:4], name = 'linear_input')
 
 # Model for xi
 
-#The first layer returns a constant which is untrained. The second layer trains the constant with the initial weight being  equal to qlogis(initial shape)
-init_xi = 0.1
+# The first layer returns a constant which is untrained. The second layer trains the constant with the initial weight being  equal to qlogis(initial shape)
+init_xi = 0.3
 
 xiBranch <- input_nn %>% layer_dense(
   units = 1 ,
   activation = 'relu',
-  input_shape = dim(X_train_nn)[2],
+  input_shape = dim(X_N)[2:4],
   trainable = F,
   weights = list(matrix(
-    0, nrow = dim(X_train_nn)[2], ncol = 1
+    0, nrow = dim(X_N)[4], ncol = 1
   ), array(1, dim = c(1))),
   name = 'xi_dense'
 ) %>%
@@ -181,114 +266,128 @@ xiBranch <- input_nn %>% layer_dense(
   )
 
 
+k1 <- 3 # kernel dimension
+k2 <- 3
+nunits = c(16,16,16) # CNN units
+
+
 #NN location branch
-nunits = c(8, 6, 4, 2, 1)
-init_loc = max(q_a) #Set initial location par
+init_loc = 10 #Set initial location par
+
+
 locBranch <- input_nn %>%
-  layer_dense(
-    units = nunits[1],
+  layer_conv_2d(
+    filters = nunits[1],
+    kernel_size = c(k1, k2),
     activation = 'relu',
-    input_shape = dim(X_train_nn)[2],
-    name = 'nonlin_loc_dense1'
-  ) %>%
-  layer_dense(units = nunits[2],
-              activation = 'relu',
-              name = 'nonlin_loc_dense2') %>%
-  layer_dense(units = nunits[3],
-              activation = 'relu',
-              name = 'nonlin_loc_dense3') %>%
-  layer_dense(units = nunits[4],
-              activation = 'relu',
-              name = 'nonlin_loc_dense4') %>%
-  layer_dense(
-    units = nunits[5],
-    activation = "linear",
-    name = 'nonlin_loc_dense6',
-    weights = list(matrix(0, nrow = nunits[4], ncol = 1), array(init_loc))
+    padding = 'same',
+    input_shape = dim(X_N)[2:4],
+    name = 'nonlin_loc_cnn1'
   )
+for (i in 2:length(nunits)) {
+  locBranch <- locBranch %>%
+    layer_conv_2d(
+      filters = nunits[i],
+      kernel_size = c(k1, k2),
+      activation = 'relu',
+      padding = 'same',
+      name = paste0("nonlin_loc_cnn", i)
+    )
+}
+locBranch <- locBranch %>% layer_dense(
+  units = 1,
+  activation = "linear",
+  name = paste0("nonlin_loc_dense"),
+  weights = list(matrix(0, nrow = nunits[length(nunits)], ncol =
+                          1), array(log(init_loc)))
+)
 
 
 #NN spread branch
-nunits = c(8, 6, 4, 2, 1)
-init_spread = max(s_b)#Set initial location par
-spreadBranch <- input_nn %>%
-  layer_dense(
-    units = nunits[1],
+init_spread = 10 #Set initial spread par
+sBranch <- input_nn %>%
+  layer_conv_2d(
+    filters = nunits[1],
+    kernel_size = c(k1, k2),
     activation = 'relu',
-    input_shape = dim(X_train_nn)[2],
-    name = 'nonlin_spread_dense1'
-  ) %>%
-  layer_dense(units = nunits[2],
-              activation = 'relu',
-              name = 'nonlin_spread_dense2') %>%
-  layer_dense(units = nunits[3],
-              activation = 'relu',
-              name = 'nonlin_spread_dense3') %>%
-  layer_dense(units = nunits[4],
-              activation = 'relu',
-              name = 'nonlin_spread_dense4') %>%
-  layer_dense(
-    units = nunits[5],
-    activation = "linear",
-    name = 'nonlin_spread_dense6',
-    weights = list(matrix(0, nrow = nunits[4], ncol = 1), array(log(init_spread)))
+    padding = 'same',
+    input_shape = dim(X_N)[2:4],
+    name = 'nonlin_s_cnn1'
   )
+for (i in 2:length(nunits)) {
+  sBranch <- sBranch %>%
+    layer_conv_2d(
+      filters = nunits[i],
+      kernel_size = c(k1, k2),
+      activation = 'relu',
+      padding = 'same',
+      name = paste0("nonlin_s_cnn", i)
+    )
+}
+sBranch <- sBranch %>% layer_dense(
+  units = 1,
+  activation = "linear",
+  name = paste0("nonlin_s_dense"),
+  weights = list(matrix(0, nrow = nunits[length(nunits)], ncol =
+                          1), array(log(init_spread)))
+)
+
 
 #Use linear activation - Weights for this layer give regression coefficients + bias = intercept
-linBranchSpread <- input_lin %>%
+linBranchSpread <- input_linear %>%
   layer_dense(
     units = 1,
     activation = 'linear',
-    input_shape = dim(X_train_lin)[2],
+    input_shape = dim(X_L)[2:4],
     name = 'lin_spread',
     weights = list(matrix(
-      0, nrow = dim(X_train_lin)[2], ncol = 1
+      0, nrow = dim(X_L)[4], ncol = 1
     )),
     use_bias = F
   )
 
 
-linBranchLoc <- input_lin %>%
+linBranchLoc <- input_linear %>%
   layer_dense(
     units = 1,
     activation = 'linear',
-    input_shape = dim(X_train_lin)[2],
+    input_shape = dim(X_L)[2:4],
     name = 'lin_loc',
     weights = list(matrix(
-      0, nrow = dim(X_train_lin)[2], ncol = 1
+      0, nrow = dim(X_L)[4], ncol = 1
     )),
     use_bias = F
   )
 
 
 #Additive layers
-addBranchloc <- input_add %>%
-  layer_reshape(target_shape = prod(dim(X_I_basis)[2:3])) %>%
+addBranchloc <- input_additive %>%
+  layer_reshape(target_shape = c(dim(X_A_basis)[2:3], prod(dim(X_A_basis)[4:5]))) %>%
   layer_dense(
     units = 1,
     activation = 'linear',
     name = 'add_loc',
     weights = list(matrix(
-      0, nrow = prod(dim(X_I_basis)[2:3]), ncol = 1
+      0, nrow = prod(dim(X_A_basis)[4:5]), ncol = 1
     )),
     use_bias = F
   )
 
 #Additive layers
-addBranchspread <- input_add %>%
-  layer_reshape(target_shape = prod(dim(X_I_basis)[2:3])) %>%
+addBranchspread <- input_additive %>%
+  layer_reshape(target_shape = c(dim(X_A_basis)[2:3], prod(dim(X_A_basis)[4:5]))) %>%
   layer_dense(
     units = 1,
     activation = 'linear',
     name = 'add_spread',
     weights = list(matrix(
-      0, nrow = prod(dim(X_I_basis)[2:3]), ncol = 1
+      0, nrow = prod(dim(X_A_basis)[4:5]), ncol = 1
     )),
     use_bias = F
   )
 
 #Add linear branch to nonlinear branches
-spreadBranchjoined <- layer_add(inputs = c(linBranchSpread, addBranchspread, spreadBranch))
+spreadBranchjoined <- layer_add(inputs = c(linBranchSpread, addBranchspread, sBranch))
 #spreadBranchjoined<- spreadBranch
 locBranchjoined <- layer_add(inputs = c(linBranchLoc, addBranchloc, locBranch))
 
@@ -305,7 +404,7 @@ locBranchjoined <- locBranchjoined %>%
 output <- layer_concatenate(c(input_u, locBranchjoined, spreadBranchjoined, xiBranch))
 
 model <- keras_model(
-  inputs = c(input_lin, input_add, input_nn, input_u),
+  inputs = c(input_linear, input_additive, input_nn, input_u),
   outputs = c(output)
 )
 summary(model)
@@ -326,7 +425,9 @@ checkpoint <- callback_model_checkpoint(
     "intermediates/models/simulation_B2/sim_model_rep",
     rep,
     "_n",
-    n
+    n,
+    "_case",
+    case
   ),
   monitor = "val_loss",
   verbose = 0,
@@ -337,19 +438,29 @@ checkpoint <- callback_model_checkpoint(
 )
 
 history <- model %>% fit(
-  list(X_train_lin, X_I_basis, X_train_nn, u_train),
+  list(X_L,X_A_basis, X_N, threshs),
   Y_train,
-  epochs = 250,
-  batch_size = 1024,
-  validation_split = 0.2,
+  epochs = 500,
+  shuffle = T,
+  batch_size = 16,
   callback = list(
     checkpoint,
     callback_early_stopping(
       monitor = "val_loss",
       min_delta = 0,
-      patience = 3
+      patience = 20
     )
   ),
+  validation_data = list(
+    list(
+      linear_input = X_L,
+      additive_input = X_A_basis,
+      nn_input = X_N,
+      u_input = threshs
+    ),
+    Y_valid
+  )
+  
 )
 
 
@@ -358,12 +469,14 @@ model <- load_model_weights_tf(model,
                                  "intermediates/models/simulation_B2/sim_model_rep",
                                  rep,
                                  "_n",
-                                 n
+                                 n,
+                                 "_case",
+                                 case
                                ))
 
 
 
-predictions <- model %>% predict(list(X_train_lin, X_I_basis, X_train_nn, u_train))
+predictions <- model %>% predict(list(X_L, X_A_basis, X_N, threshs))
 
 # Evaluate performance
 metrics = matrix(nrow = 2, ncol = 4)
@@ -400,9 +513,9 @@ for (i in 1:dim(knots)[1]) {
   gam_weights_loc[i, ] = temp1[(1 + (i - 1) * n.knot):(i * n.knot)]
 }
 
-
+print("MISE estimates")
 for (i in 1:dim(knots)[1]) {
-  plt.x = quantile(X_train_add[,  i], prob = seq(0, 1, length = 5000))
+  plt.x = quantile(X_A_orig[, , , i], prob = seq(0, 1, length = 5000))
   temp = matrix(nrow = length(plt.x), ncol = n.knot)
   for (j in 1:n.knot) {
     temp[, j] = rad(plt.x, knots[i, j])
@@ -419,7 +532,11 @@ for (i in 1:dim(knots)[1]) {
   
   plt.y = plt.y - y.zero #subtract the value of the spline at the zero
   if (i == 1) {
-    gam.part.q = rep(0, length(plt.x))
+    if (case == 1)
+      gam.part.q = 0.2 * (0.1 * plt.x ^ 3 - plt.x ^ 2 + plt.x)
+    
+    if (case == 2)
+      gam.part.q = rep(0, length(plt.x))
     plot(
       plt.x,
       plt.y,
@@ -435,7 +552,11 @@ for (i in 1:dim(knots)[1]) {
            pch = 2)
     points(plt.x, gam.part.q, col = "blue", type = 'l')
   } else if (i == 2) {
-    gam.part.q = plt.x
+    if (case == 2)
+      gam.part.q = plt.x
+    if (case == 1)
+      gam.part.q = 0.2 * (-0.4 * plt.x ^ 3 - 2 * plt.x)
+
     plot(
       plt.x,
       plt.y,
@@ -457,7 +578,7 @@ for (i in 1:dim(knots)[1]) {
 }
 
 for (i in 1:dim(knots)[1]) {
-  plt.x = quantile(X_train_add[,  i], prob = seq(0, 1, length = 5000))
+  plt.x = quantile(X_A_orig[, , , i], prob = seq(0, 1, length = 5000))
   
   temp = matrix(nrow = length(plt.x), ncol = n.knot)
   for (j in 1:n.knot) {
@@ -475,7 +596,11 @@ for (i in 1:dim(knots)[1]) {
   y.zero = as.numeric(temp %*% gam_weights_spread[i, ])
   plt.y = plt.y - y.zero #subtract the value of the spline at the zero
   if (i == 1) {
-    gam.part.s = rep(0, length(plt.x))
+    if (case == 2)
+      gam.part.s = rep(0, length(plt.x))
+    if (case == 1)
+      gam.part.s = 0.2 * (0.1 * plt.x ^ 3 - 0.1 * plt.x ^ 2 + plt.x)
+    
     plot(
       plt.x,
       plt.y,
@@ -491,7 +616,10 @@ for (i in 1:dim(knots)[1]) {
            pch = 2)
     points(plt.x, gam.part.s, col = "blue", type = 'l')
   } else if (i == 2) {
-    gam.part.s = 0.2 * (0.1 * plt.x ^ 3 - 0.3 * plt.x ^ 2 - plt.x)
+    if (case == 2)
+      gam.part.s = 0.2 * (0.1 * plt.x ^ 3 - 0.3 * plt.x ^ 2 - plt.x)
+    if (case == 1)
+      gam.part.s = 0.2 * (-0.1 * plt.x ^ 3 + 0.2 * plt.x ^ 2 - 0.5 * plt.x)
     plot(
       plt.x,
       plt.y,
@@ -517,5 +645,7 @@ save(metrics,
        rep,
        "_n",
        n,
+       "_case",
+       case,
        ".Rdata"
      ))
