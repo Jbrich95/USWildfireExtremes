@@ -54,6 +54,11 @@ or by manually installing the system dependencies before installing `devtools` m
 sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev
 ```
 
+On MacOS, you may instead need to run:
+
+```
+brew install freetype harfbuzz fribidi
+```
 
 ### Hardware requirements
 
