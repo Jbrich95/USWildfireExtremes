@@ -76,14 +76,15 @@ if (install_depends == "y") {
   install_exact_versions <- install_exact_versions == "y" # Convert to Boolean
   
   
-  CRANMIRROR <- "https://cran.ma.imperial.ac.uk"
+  CRANMIRROR <- "https://cloud.r-project.org"
   
   ## devtools is required for installing the other packages, so it has to be installed here
   if (!("devtools" %in% rownames(installed.packages()))) {
     cat("Installing the package 'devtools'...\n")
     install.packages("devtools", repos = CRANMIRROR, dependencies = TRUE)
   }
-  if (!("devtools" %in% rownames(installed.packages()))) stop("\nThe package 'devtools' failed to install, please install it manually. \n Note that on Linux systems there are several system dependencies that may need to be installed before installing devtools (e.g., fontconfig1, harfbuzz, and fribidi). Try using the following command before installing devtools: \n sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev\n On mac)S, you may need to install libgit2: \n brew install libgit2\n 
+  if (!("devtools" %in% rownames(installed.packages()))) stop("\nThe package 'devtools' failed to install, please install it manually. \n Note that on Linux systems there are several system dependencies that may need to be installed before installing devtools (e.g., fontconfig1, harfbuzz, and fribidi). Try using the following command before installing devtools: \n sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev \n On macOS, you may need to install libgit2: \n brew install libgit2\n or install dependencies for systemfonts: \n
+  brew install freetype harfbuzz fribidi \n
  ")
   
   

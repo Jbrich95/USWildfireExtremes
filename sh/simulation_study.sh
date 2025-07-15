@@ -33,7 +33,11 @@ echo "Please enter the sample size n."
 echo ""
 read n
 
-Rscript src/Simulation_study/B2_parameter_estimation.R $rep_id $n
+echo ""
+echo "Please enter the case ID (1 or 2)"
+echo ""
+read case_id
+Rscript src/Simulation_study/B2_parameter_estimation.R $rep_id $n $case_id
 fi
 
 echo ""

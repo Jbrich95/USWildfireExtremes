@@ -92,7 +92,7 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	echo "Training the threshold u(s,t) CNN model"
 	echo ""
 
-	# Rscript src/Application/bootstrap_threshold_estimate.R $boot_id
+	 Rscript src/Application/bootstrap_threshold_estimate.R $boot_id
 	
 	echo ""
 	echo "Training the bGEV models"
@@ -101,12 +101,12 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	echo ""
 	echo "linear bGEV model"
 	echo ""
-	#Rscript src/Application/bootstrap_bGEV_linear_estimate.R $boot_id
+	Rscript src/Application/bootstrap_bGEV_linear_estimate.R $boot_id
 			
 	echo ""
 	echo "GAM bGEV model"
 	echo ""
-	#Rscript src/Application/bootstrap_bGEV_GAM_estimate.R $boot_id
+	Rscript src/Application/bootstrap_bGEV_GAM_estimate.R $boot_id
 	
 	echo ""
 	echo "local PINN bGEV model"
@@ -116,17 +116,17 @@ if [[ $bool == "y" ||  $bool == "Y" ]]; then
 	echo ""
 	echo "local PINN (homogeneous xi) bGEV model"
 	echo ""
-	#Rscript src/Application/bootstrap_bGEV_local_PINN_homo_xi_estimate.R $boot_id
+	Rscript src/Application/bootstrap_bGEV_local_PINN_homo_xi_estimate.R $boot_id
 	
 	echo ""
 	echo "global PINN bGEV model"
 	echo ""
-	#Rscript src/Application/bootstrap_bGEV_global_PINN_estimate.R $boot_id
+	Rscript src/Application/bootstrap_bGEV_global_PINN_estimate.R $boot_id
 	
     echo ""
 	echo "CNN bGEV model"
 	echo ""
-	# Rscript src/Application/bootstrap_bGEV_NN_estimate.R $boot_id
+	 Rscript src/Application/bootstrap_bGEV_NN_estimate.R $boot_id
 	
 	
 	echo ""
