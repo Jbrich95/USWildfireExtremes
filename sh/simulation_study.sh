@@ -41,7 +41,7 @@ Rscript src/Simulation_study/B2_parameter_estimation.R $rep_id $n $case_id
 fi
 
 echo ""
-echo "Do you wish to run a replicate of study B3.1 for response distribution misspecification? (y/n)"
+echo "Do you wish to run a replicate of study B3 for response distribution misspecification? (y/n)"
 echo ""
 read bool
 
@@ -66,7 +66,7 @@ echo "Please enter the case ID (1=log-normal, 2=GPD)"
 echo ""
 read case_id
 
-Rscript src/Simulation_study/B3_1_misspecified_response.R $rep_id $n $case_id
+Rscript src/Simulation_study/B3_misspecified_response.R $rep_id $n $case_id
 fi
 
 
